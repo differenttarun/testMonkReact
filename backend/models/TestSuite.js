@@ -1,32 +1,27 @@
-const mongoose = require('mongoose');
-const {Schema}  = mongoose;
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
 const getNextSequence = require("../utils/getNextSequence");
 
 const testSuiteSchema = Schema({
   testSuiteId: {
     type: Number,
-    unique: true,
-    required: true
   },
   testSuiteName: {
     type: String,
-    required: true
+    required: true,
   },
-  createdDate :{
+  createdDate: {
     type: Date,
-    default: Date.now
-
-  }
-
+    default: Date.now,
+  },
 });
 
-// Auto-generate testCaseId
-testCaseSchema.pre("save", async function(next) {
-  if (!this.testCaseId) {
-    this.testCaseId = await getNextSequence("testSuite");
+// Auto-generate testSuiteId
+testSuiteSchema.pre("save", async function () {
+  if (this.isNew && !this.testSuiteId) {
+    this.testSuiteId = await getNextSequence("testSuite");
   }
-  next();
 });
 
 module.exports = mongoose.model("testSuite", testSuiteSchema);
