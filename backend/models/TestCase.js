@@ -1,32 +1,27 @@
-const mongoose = require('mongoose');
-const {Schema}  = mongoose;
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
 const getNextSequence = require("../utils/getNextSequence");
 
 const testCaseSchema = Schema({
   testCaseId: {
     type: Number,
-    unique: true,
-    required: true
   },
   testCaseName: {
     type: String,
-    required: true
+    required: true,
   },
-  createdDate :{
+  createdDate: {
     type: Date,
-    default: Date.now
-
-  }
-
+    default: Date.now,
+  },
 });
 
 // Auto-generate testCaseId
-testCaseSchema.pre("save", async function(next) {
-  if (!this.testCaseId) {
+testCaseSchema.pre("save", async function () {
+  if (this.isNew && !this.testCaseId) {
     this.testCaseId = await getNextSequence("testcase");
   }
-  next();
 });
 
 module.exports = mongoose.model("testCase", testCaseSchema);

@@ -9,6 +9,9 @@ connectToMongo();
 const app = express();
 const port = 5001;
 
+app.use(express.json());
+
+//Routes
 app.use('/api/vi/testSuite', require('./routes/testSuite.js'));
 app.use('/api/vi/testCase', require('./routes/testCase.js'));
 app.use('/api/vi/mapTestSuiteTestCase', require('./routes/testSuiteTestCase.js'));
