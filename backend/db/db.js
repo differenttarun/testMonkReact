@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const mongodbURI = "mongodb://192.168.68.107:27017/fastdb"
+const mongoose = require("mongoose");
+const mongodbURI = "mongodb://localhost:27017/fastdb";
 
 // const connectToMongo =  () =>{
 //     console.log("connecting to db");
@@ -12,7 +12,7 @@ async function connectToMongo() {
   try {
     console.log("connecting to db");
     await mongoose.connect(mongodbURI);
-    console.log( "DB Connected");
+    console.log("DB Connected");
   } catch (err) {
     console.error(" DB Error:", err);
   }
