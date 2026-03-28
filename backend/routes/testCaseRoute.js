@@ -36,7 +36,7 @@ router.get("/fetchTestCaseById/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const testCase = await await TestCase.findOne({
+    const testCase = await TestCase.findOne({
       testCaseId: req.params.id,
     });
 

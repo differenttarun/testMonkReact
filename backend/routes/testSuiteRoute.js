@@ -36,7 +36,7 @@ router.get("/fetchSuiteById/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const suite = await await TestSuite.findOne({
+    const suite = await TestSuite.findOne({
       testSuiteId: req.params.id,
     });
 

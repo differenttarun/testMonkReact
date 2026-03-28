@@ -2,7 +2,7 @@ const express = require("express");
 const ScriptModel = require("../models/ScriptModel");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-// Sample route
+// ROUTE 1: create Script Model
 router.post(
   "/create",
   [
@@ -46,5 +46,41 @@ router.post(
     }
   },
 );
+
+// ROUTE 2: get All Script models case
+router.get("/fetchAllScriptModels", async (req, res) => {
+  try {
+    const scriptModels = await ScriptModel.find();
+
+    return res.json(scriptModels);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching scriptModels",
+      error: error.message,
+    });
+  }
+});
+
+// ROUTE 3: get scriptModel case modelName
+router.get("/fetchScriptModelByModelName/:model", async (req, res) => {
+  try {
+    const { model } = req.params;
+
+    const scriptModels = await ScriptModel.findOne({
+      modelName: req.params.model,
+    });
+
+    if (scriptModels.length === 0) {
+      return res.status(404).json({
+        message: "scriptmodel with modelname " + model + " not found ",
+      });
+    }
+
+    res.status(200).json(scriptModels);
+  } catch (error) {
+    console.error("Error fetching AppModel:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 module.exports = router;

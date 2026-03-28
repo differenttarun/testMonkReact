@@ -49,4 +49,40 @@ router.post(
   },
 );
 
+// ROUTE 2: get All test case
+router.get("/fetchAllAppModels", async (req, res) => {
+  try {
+    const appModels = await AppModel.find();
+
+    return res.json(appModels);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching appModels",
+      error: error.message,
+    });
+  }
+});
+
+// ROUTE 3: get AppModel by modelName
+router.get("/fetchAppModelByModelName/:model", async (req, res) => {
+  try {
+    const { model } = req.params;
+
+    const appModels = await AppModel.find({
+      modelName: model,
+    });
+
+    if (appModels.length === 0) {
+      return res.status(404).json({
+        message: "AppModel with modelname " + model + " not found",
+      });
+    }
+
+    res.status(200).json(appModels);
+  } catch (error) {
+    console.error("Error fetching AppModel:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;
