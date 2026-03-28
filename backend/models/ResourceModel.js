@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 
 const getNextSequence = require("../utils/getNextSequence");
 
-const scriptModelSchema = Schema({
-  scriptModelId: {
+const resourceModelSchema = Schema({
+  resourceModelId: {
     type: Number,
   },
   modelName: {
@@ -23,15 +23,19 @@ const scriptModelSchema = Schema({
     type: String,
     required: true,
   },
+  env: {
+    type: String,
+    required: true,
+  },
 });
 
-scriptModelSchema.index({ modelName: 1, key: 1 }, { unique: true });
+resourceModelSchema.index({ modelName: 1, key: 1, env: 1 }, { unique: true });
 
 // Auto-generate scriptModelId
-scriptModelSchema.pre("save", async function () {
-  if (this.isNew && !this.scriptModelId) {
-    this.scriptModelId = await getNextSequence("scriptModel");
+resourceModelSchema.pre("save", async function () {
+  if (this.isNew && !this.resourceModelId) {
+    this.resourceModelId = await getNextSequence("resourceModel");
   }
 });
 
-module.exports = mongoose.model("scriptModel", scriptModelSchema);
+module.exports = mongoose.model("resourceModel", resourceModelSchema);

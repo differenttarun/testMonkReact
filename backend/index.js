@@ -20,18 +20,8 @@ app.use(
 );
 app.use("/api/vi/testData", require("./routes/testDataRoute.js"));
 app.use("/api/vi/scriptmodel", require("./routes/scriptModelRoute.js"));
-
-app.get("/", (req, res) => {
-  res.send("Hello world2");
-});
-
-app.get("/api/vi/login", (req, res) => {
-  res.send("Hello login");
-});
-
-app.get("/api/vi/signup", (req, res) => {
-  res.send("Hello signup");
-});
+app.use("/api/vi/appmodel", require("./routes/appModelRoute.js"));
+app.use("/api/vi/resourcemodel", require("./routes/resourceModelRoute.js"));
 
 app.listen(port, () => {
   console.log(`app listening at http://localhost:${port}`);
