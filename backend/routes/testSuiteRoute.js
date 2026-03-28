@@ -3,7 +3,7 @@ const TestSuite = require("../models/TestSuite");
 const router = express.Router();
 
 // Sample route
-router.get("/create", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const testSuite = TestSuite(req.body);
     await testSuite.save();

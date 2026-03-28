@@ -1,0 +1,32 @@
+const express = require("express");
+const TestData = require("../models/TestData");
+const router = express.Router();
+
+// Sample route
+router.post("/create", async (req, res) => {
+  try {
+    const testData = TestData(req.body);
+    await testData.save();
+    return res.json({
+      message: "Test Data created successfully",
+      id: testData.testDataId, // auto-generated ID
+      _id: testData._id, // MongoDB default ID
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      console.error(
+        "Error while Generating test suite test case mapping:  " + error,
+      );
+      return res.status(400).json({
+        message: "Test Data already present for env,key and value",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+});
+
+module.exports = router;

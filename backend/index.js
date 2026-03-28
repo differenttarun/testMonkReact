@@ -18,6 +18,8 @@ app.use(
   "/api/vi/testSuiteTestCaseMapping",
   require("./routes/testSuiteTestCaseRoute.js"),
 );
+app.use("/api/vi/testData", require("./routes/testDataRoute.js"));
+app.use("/api/vi/scriptmodel", require("./routes/scriptModelRoute.js"));
 
 app.get("/", (req, res) => {
   res.send("Hello world2");

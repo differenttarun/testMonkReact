@@ -4,7 +4,7 @@ const TestSuiteTestCaseMapping = require("../models/TestSuiteTestCaseMapping");
 const TestCase = require("../models/TestCase");
 const TestSuite = require("../models/TestSuite");
 
-router.get("/create", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const testSuiteTestCaseMapping = TestSuiteTestCaseMapping(req.body);
 
