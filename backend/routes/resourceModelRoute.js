@@ -3,12 +3,12 @@ const ResourceModel = require("../models/ResourceModel");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 
-// Sample route
+// ROUTE 1  create Resource Model
 router.post(
   "/create",
   [
-    body("modelName", "Model Name should be of minimum Length 5").isLength({
-      min: 5,
+    body("modelName", "Model Name should be of minimum Length 4").isLength({
+      min: 4,
     }),
     body("key", "Key should be of minimum Length 3").isLength({
       min: 3,
@@ -49,4 +49,67 @@ router.post(
   },
 );
 
+// ROUTE 2: get All appModels case
+router.get("/fetchAll", async (req, res) => {
+  try {
+    const resourceModels = await ResourceModel.find();
+
+    return res.json(resourceModels);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching resourceModels",
+      error: error.message,
+    });
+  }
+});
+
+// ROUTE 3: get ResourceModels by modelName
+router.get("/fetchByModelName/:model", async (req, res) => {
+  try {
+    const { model } = req.params;
+
+    const resourceModels = await ResourceModel.find({
+      modelName: model,
+    });
+
+    if (resourceModels.length === 0) {
+      return res.status(404).json({
+        message: "ResourceModel with modelname " + model + " not found",
+      });
+    }
+
+    res.status(200).json(resourceModels);
+  } catch (error) {
+    console.error("Error fetching AppModel:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ROUTE 3: get ResourceModels by modelName
+router.get("/fetchByModelNameAndEnv/:model/:env", async (req, res) => {
+  try {
+    const { model, env } = req.params;
+
+    const resourceModels = await ResourceModel.find({
+      modelName: model,
+      env: env,
+    });
+
+    if (resourceModels.length === 0) {
+      return res.status(404).json({
+        message:
+          "ResourceModel with modelname " +
+          model +
+          " and env " +
+          env +
+          " not found",
+      });
+    }
+
+    res.status(200).json(resourceModels);
+  } catch (error) {
+    console.error("Error fetching ResourceModel:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 module.exports = router;

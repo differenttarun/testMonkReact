@@ -6,8 +6,8 @@ const { body, validationResult } = require("express-validator");
 router.post(
   "/create",
   [
-    body("modelName", "Model Name should be of minimum Length 5").isLength({
-      min: 5,
+    body("modelName", "Model Name should be of minimum Length 4").isLength({
+      min: 4,
     }),
     body("key", "key should be of minimum Length 3").isLength({
       min: 3,
@@ -48,7 +48,7 @@ router.post(
 );
 
 // ROUTE 2: get All Script models case
-router.get("/fetchAllScriptModels", async (req, res) => {
+router.get("/fetchAll", async (req, res) => {
   try {
     const scriptModels = await ScriptModel.find();
 
@@ -62,23 +62,24 @@ router.get("/fetchAllScriptModels", async (req, res) => {
 });
 
 // ROUTE 3: get scriptModel case modelName
-router.get("/fetchScriptModelByModelName/:model", async (req, res) => {
+router.get("/fetchByModelName/:model", async (req, res) => {
   try {
     const { model } = req.params;
 
-    const scriptModels = await ScriptModel.findOne({
-      modelName: req.params.model,
+    const scriptModels = await ScriptModel.find({
+      modelName: model,
     });
 
+    console.log("Count:", scriptModels.length);
     if (scriptModels.length === 0) {
       return res.status(404).json({
-        message: "scriptmodel with modelname " + model + " not found ",
+        message: "ScriptModels with modelname " + model + " not found",
       });
     }
 
     res.status(200).json(scriptModels);
   } catch (error) {
-    console.error("Error fetching AppModel:", error);
+    console.error("Error fetching ScriptModels:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

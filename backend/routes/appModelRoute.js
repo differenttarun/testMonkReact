@@ -9,8 +9,8 @@ router.post(
   "/create",
 
   [
-    body("modelName", "Model Name should be of minimum Lenth 5").isLength({
-      min: 5,
+    body("modelName", "Model Name should be of minimum Lenth 4").isLength({
+      min: 4,
     }),
     body("key", "Key should be of minimum Lenth 3").isLength({ min: 3 }),
   ],
@@ -49,8 +49,8 @@ router.post(
   },
 );
 
-// ROUTE 2: get All test case
-router.get("/fetchAllAppModels", async (req, res) => {
+// ROUTE 2: get All appModels case
+router.get("/fetchAll", async (req, res) => {
   try {
     const appModels = await AppModel.find();
 
@@ -64,7 +64,7 @@ router.get("/fetchAllAppModels", async (req, res) => {
 });
 
 // ROUTE 3: get AppModel by modelName
-router.get("/fetchAppModelByModelName/:model", async (req, res) => {
+router.get("/fetchByModelName/:model", async (req, res) => {
   try {
     const { model } = req.params;
 
