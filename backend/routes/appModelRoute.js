@@ -4,7 +4,7 @@ const router = express.Router();
 
 const { body, validationResult } = require("express-validator");
 
-// Sample route
+// ROUTE 1  create App Model
 router.post(
   "/create",
 

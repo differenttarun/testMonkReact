@@ -2,7 +2,7 @@ const express = require("express");
 const TestSuite = require("../models/TestSuite");
 const router = express.Router();
 
-// Sample route
+// ROUTE 1  create Test Suite
 router.post("/create", async (req, res) => {
   try {
     const testSuite = TestSuite(req.body);
@@ -14,6 +14,42 @@ router.post("/create", async (req, res) => {
     });
   } catch (err) {
     console.error("Error while Generating test suite:  " + err);
+  }
+});
+
+// ROUTE 2:  get All suites
+router.get("/fetchAllSuites", async (req, res) => {
+  try {
+    const suites = await TestSuite.find();
+
+    return res.json(suites);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching test suites",
+      error: error.message,
+    });
+  }
+});
+
+// ROUTE 3:  get suite by id
+router.get("/fetchSuiteById/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const suite = await await TestSuite.findOne({
+      testSuiteId: req.params.id,
+    });
+
+    if (!suite) {
+      return res
+        .status(404)
+        .json({ message: "Suite  with id " + id + "not found" });
+    }
+
+    res.status(200).json(suite);
+  } catch (error) {
+    console.error("Error fetching suite:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
