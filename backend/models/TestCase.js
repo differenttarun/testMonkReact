@@ -11,6 +11,10 @@ const testCaseSchema = Schema({
     type: String,
     required: true,
   },
+  testScriptId: {
+    type: Number,
+    required: true,
+  },
   createdDate: {
     type: Date,
     default: Date.now,

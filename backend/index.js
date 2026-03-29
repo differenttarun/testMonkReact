@@ -20,6 +20,8 @@ app.use(
 );
 app.use("/api/vi/testData", require("./routes/testDataRoute.js"));
 app.use("/api/vi/scriptmodel", require("./routes/scriptModelRoute.js"));
+app.use("/api/vi/testScript", require("./routes/testScriptRoute.js"));
+app.use("/api/vi/activity", require("./routes/activityRoute.js"));
 app.use("/api/vi/appmodel", require("./routes/appModelRoute.js"));
 app.use("/api/vi/resourcemodel", require("./routes/resourceModelRoute.js"));
 

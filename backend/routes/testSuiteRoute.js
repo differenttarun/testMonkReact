@@ -1,5 +1,7 @@
 const express = require("express");
 const TestSuite = require("../models/TestSuite");
+const TestSuiteTestCaseMapping = require("../models/TestSuiteTestCaseMapping");
+const TestCase = require("../models/TestCase");
 const router = express.Router();
 
 // ROUTE 1  create Test Suite
@@ -50,6 +52,55 @@ router.get("/fetchSuiteById/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching suite:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ROUTE 4:  get Cases  by test suite id  id
+router.get("/fetchTestCasesBySuiteId/:id", async (req, res) => {
+  try {
+    // convert to number as needed in aggrigation
+    const suiteId = Number(req.params.id);
+
+    const result = await TestSuite.aggregate([
+      { $match: { testSuiteId: suiteId } },
+
+      {
+        $lookup: {
+          from: "testsuitetestcasemappings",
+          localField: "testSuiteId",
+          foreignField: "testSuiteId",
+          as: "mappings",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "testcases",
+          localField: "mappings.testCaseId",
+          foreignField: "testCaseId",
+          as: "testCaseList",
+        },
+      },
+
+      {
+        $project: {
+          testSuiteId: 1,
+          testSuiteName: 1,
+          testCaseList: 1,
+        },
+      },
+    ]);
+
+    if (!result.length) {
+      return res.status(404).json({
+        message: `Suite with id ${suiteId} not found`,
+      });
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching data" });
   }
 });
 
