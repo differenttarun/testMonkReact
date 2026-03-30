@@ -29,4 +29,36 @@ router.post("/create", async (req, res) => {
   }
 });
 
+// ROUTE 3: get ResourceModels by modelName
+router.get(
+  "/fetchTestDataByTestCaseIDAndEnv/:testCaseId/:env",
+  async (req, res) => {
+    try {
+      const testCaseId = Number(req.params.testCaseId);
+      const env = req.params.env;
+
+      const testDataList = await TestData.find({
+        testCaseId: testCaseId,
+        env: env,
+      });
+
+      if (testDataList.length === 0) {
+        return res.status(404).json({
+          message:
+            "testData with testCaseid " +
+            testCaseId +
+            " and env " +
+            env +
+            " not found",
+        });
+      }
+
+      res.status(200).json(testDataList);
+    } catch (error) {
+      console.error("Error fetching ResourceModel:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  },
+);
+
 module.exports = router;

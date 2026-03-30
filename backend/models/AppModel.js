@@ -11,6 +11,10 @@ const appModelSchema = Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    required: true,
+  },
   createdDate: {
     type: Date,
     default: Date.now,
@@ -20,6 +24,10 @@ const appModelSchema = Schema({
     required: true,
   },
   value: {
+    type: String,
+    required: true,
+  },
+  env: {
     type: String,
     required: true,
   },

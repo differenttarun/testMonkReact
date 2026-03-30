@@ -85,4 +85,27 @@ router.get("/fetchByModelName/:model", async (req, res) => {
   }
 });
 
+// ROUTE 3: get AppModel by modelName
+router.get("/fetchByModelNameAndEnv/:model/:env", async (req, res) => {
+  try {
+    const { model, env } = req.params;
+
+    const appModels = await AppModel.find({
+      modelName: model,
+      env: env,
+    });
+
+    if (appModels.length === 0) {
+      return res.status(404).json({
+        message: "AppModel with modelname " + model + " not found",
+      });
+    }
+
+    res.status(200).json(appModels);
+  } catch (error) {
+    console.error("Error fetching AppModel:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;
