@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, to } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -7,7 +7,7 @@ const Navbar = () => {
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            Navbar
+            TestMonk
           </Link>
           <button
             className="navbar-toggler"
@@ -23,13 +23,67 @@ const Navbar = () => {
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <Link className="nav-link active" aria-current="page" to="/">
-                  Home
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/testSuite"
+                >
+                  Test Suite
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/about">
-                  About
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/testCase"
+                >
+                  Test Case
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/testScript"
+                >
+                  Test Script
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/scriptModel"
+                >
+                  Script Model
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/appModel"
+                >
+                  App Model
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/resourceModel"
+                >
+                  Resource Model
+                </Link>
+              </li>
+
+              <li className="nav-item">
+                <Link
+                  className="nav-link active"
+                  aria-current="page"
+                  to="/expectedResults"
+                >
+                  Expected Results
                 </Link>
               </li>
             </ul>
