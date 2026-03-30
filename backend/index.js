@@ -24,6 +24,7 @@ app.use("/api/vi/testScript", require("./routes/testScriptRoute.js"));
 app.use("/api/vi/activity", require("./routes/activityRoute.js"));
 app.use("/api/vi/appmodel", require("./routes/appModelRoute.js"));
 app.use("/api/vi/resourcemodel", require("./routes/resourceModelRoute.js"));
+app.use("/api/vi/expectedResult", require("./routes/expectedResultRoute.js"));
 
 app.listen(port, () => {
   console.log(`app listening at http://localhost:${port}`);
