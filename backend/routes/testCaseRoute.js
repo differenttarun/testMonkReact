@@ -1,5 +1,6 @@
 const express = require("express");
 const TestCase = require("../models/TestCase");
+const TestSuiteTestCaseMapping = require("../models/TestSuiteTestCaseMapping");
 const router = express.Router();
 
 // ROUTE 1: create test case
@@ -14,6 +15,49 @@ router.post("/create", async (req, res) => {
     });
   } catch (err) {
     console.error("Error while Generating test case:  " + err);
+  }
+});
+
+// ROUTE 1  delete Test case
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const testCaseId = Number(req.params.id);
+
+    if (!testCaseId) {
+      return res.status(400).json({
+        message: "Invalid testCaseId",
+      });
+    }
+
+    const mappingResult = await TestSuiteTestCaseMapping.deleteMany({
+      testCaseId: testCaseId,
+    });
+
+    console.log(
+      `Deleted ${mappingResult.deletedCount} mappings for suite ${testCaseId}`,
+    );
+
+    const deletedTest = await TestCase.findOneAndDelete({
+      testCaseId: testCaseId,
+    });
+
+    if (!deletedTest) {
+      return res.status(404).json({
+        message: `Test Case with id ${suiteId} not found`,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Test Case deleted successfully",
+      data: deletedTest,
+    });
+  } catch (error) {
+    console.error("Delete Error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 
@@ -50,6 +94,29 @@ router.get("/fetchTestCaseById/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching testCase:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const testCaseId = Number(req.params.id);
+
+    const updated = await TestCase.findOneAndUpdate(
+      { testCaseId },
+      {
+        testCaseName: req.body.testCaseName,
+        testScriptId: req.body.testScriptId,
+      },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Test case not found" });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
 

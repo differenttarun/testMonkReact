@@ -17,6 +17,7 @@ const TestSuiteList = () => {
 
   const [newSuiteName, setNewSuiteName] = useState("");
   const [createStatus, setCreateStatus] = useState("");
+  const [editSuite, setEditSuite] = useState(null);
 
   // Fetch all test suites
   useEffect(() => {
@@ -36,6 +37,69 @@ const TestSuiteList = () => {
 
     fetchTestSuites();
   }, []);
+
+  const fetchTestSuites = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:5001/api/vi/testSuite/fetchAllSuites",
+      );
+      const data = await res.json();
+      setTestSuites(data);
+    } catch (err) {
+      setError("Failed to fetch test suites");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveSuiteUpdate = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:5001/api/vi/testSuite/${editSuite.testSuiteId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            testSuiteName: editSuite.testSuiteName,
+          }),
+        },
+      );
+
+      if (!res.ok) throw new Error("Update failed");
+
+      // close modal
+      document.getElementById("closeSuiteModalBtn").click();
+
+      // refresh list
+      await fetchTestSuites();
+    } catch (err) {
+      console.error("Error updating suite:", err);
+    }
+  };
+
+  const handleSuiteChange = (e) => {
+    const { name, value } = e.target;
+
+    setEditSuite({
+      ...editSuite,
+      [name]: value,
+    });
+  };
+
+  const handleUpdateSuite = (suite) => {
+    setEditSuite({
+      testSuiteId: suite.testSuiteId,
+      testSuiteName: suite.testSuiteName,
+    });
+
+    // open modal
+    const modal = new window.bootstrap.Modal(
+      document.getElementById("updateSuiteModal"),
+    );
+    modal.show();
+  };
 
   const handleCreateSuite = async () => {
     if (!newSuiteName.trim()) {
@@ -236,21 +300,37 @@ const TestSuiteList = () => {
           </button>
         </div>
       </div>
+      <ul className="list-group mt-3">
+        {/* Header Row */}
+        <li className="list-group-item d-flex justify-content-between align-items-center bg-dark text-white fw-bold">
+          <div className="me-3">
+            <span>Test Suite</span>
+          </div>
 
-      <ul className="list-group">
+          <div className="d-flex gap-3">
+            <span>Actions</span>
+          </div>
+        </li>
+
+        {/* Data Rows */}
         {testSuites.map((suite) => (
           <li
-            key={suite._id || suite.id}
+            key={suite._id || suite.testSuiteId}
             className="list-group-item d-flex justify-content-between align-items-center"
           >
-            {/* Title */}
             <div className="me-3">
               <h5 className="mb-0">
                 {suite.testSuiteId + " : " + suite.testSuiteName}
               </h5>
+
+              <small className="text-muted">
+                Created:{" "}
+                {suite.createdDate
+                  ? new Date(suite.createdDate).toLocaleDateString()
+                  : "N/A"}
+              </small>
             </div>
 
-            {/* Buttons (LEFT side) */}
             <div className="d-flex gap-2">
               <button
                 className="btn btn-primary btn-sm"
@@ -259,6 +339,13 @@ const TestSuiteList = () => {
                 onClick={() => handleView(suite.testSuiteId)}
               >
                 View
+              </button>
+
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => handleUpdateSuite(suite)}
+              >
+                Update
               </button>
 
               <button
@@ -406,6 +493,57 @@ const TestSuiteList = () => {
             <div className="modal-footer">
               <button className="btn btn-secondary" data-bs-dismiss="modal">
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className="modal fade"
+        id="updateSuiteModal"
+        tabIndex="-1"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Update Test Suite</h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <div className="modal-body">
+              <div className="mb-3">
+                <label className="form-label">Test Suite Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="testSuiteName"
+                  value={editSuite?.testSuiteName || ""}
+                  onChange={handleSuiteChange}
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                id="closeSuiteModalBtn"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleSaveSuiteUpdate}
+              >
+                Update
               </button>
             </div>
           </div>

@@ -19,7 +19,7 @@ router.post("/create", async (req, res) => {
   }
 });
 
-// ROUTE 1  create Test Suite
+// ROUTE 1  delete Test Suite
 router.delete("/delete/:id", async (req, res) => {
   try {
     const suiteId = Number(req.params.id);
@@ -159,6 +159,26 @@ router.get("/fetchTestCasesBySuiteId/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const testSuiteId = Number(req.params.id);
+
+    const updated = await TestSuite.findOneAndUpdate(
+      { testSuiteId },
+      { testSuiteName: req.body.testSuiteName },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Suite not found" });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
 
