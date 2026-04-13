@@ -53,4 +53,57 @@ router.get("/fetchTestScriptById/:id", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const updated = await TestScript.findOneAndUpdate(
+      { testScriptId: id },
+      { $set: req.body },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Test Script not found",
+      });
+    }
+
+    res.json({
+      message: "Test Script updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error updating Test Script",
+    });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const deleted = await TestScript.findOneAndDelete({
+      testScriptId: id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Test Script not found",
+      });
+    }
+
+    res.json({
+      message: "Test Script deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error deleting Test Script",
+    });
+  }
+});
+
 module.exports = router;
