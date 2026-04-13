@@ -108,4 +108,57 @@ router.get("/fetchByModelNameAndEnv/:model/:env", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const updated = await AppModel.findOneAndUpdate(
+      { appModelId: id },
+      { $set: req.body },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "App Model not found",
+      });
+    }
+
+    res.json({
+      message: "App Model updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error updating App Model",
+    });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const deleted = await AppModel.findOneAndDelete({
+      appModelId: id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "App Model not found",
+      });
+    }
+
+    res.json({
+      message: "App Model deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error deleting App Model",
+    });
+  }
+});
+
 module.exports = router;

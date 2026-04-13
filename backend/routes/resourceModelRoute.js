@@ -112,4 +112,57 @@ router.get("/fetchByModelNameAndEnv/:model/:env", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+router.put("/update/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const updated = await ResourceModel.findOneAndUpdate(
+      { resourceModelId: id },
+      { $set: req.body },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Resource Model not found",
+      });
+    }
+
+    res.json({
+      message: "Resource Model updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error updating Resource Model",
+    });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const deleted = await ResourceModel.findOneAndDelete({
+      resourceModelId: id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Resource Model not found",
+      });
+    }
+
+    res.json({
+      message: "Resource Model deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error deleting Resource Model",
+    });
+  }
+});
 module.exports = router;

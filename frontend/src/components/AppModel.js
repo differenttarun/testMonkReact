@@ -1,7 +1,226 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Modal, Button, Form, Table } from "react-bootstrap";
 
-function AppModel() {
-  return <div>This is app Model</div>;
-}
+const AppModelPage = () => {
+  const [models, setModels] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editModel, setEditModel] = useState(null);
 
-export default AppModel;
+  const [formData, setFormData] = useState({
+    modelName: "",
+    type: "",
+    key: "",
+    value: "",
+    env: "",
+  });
+
+  // 🔹 Fetch all models
+  const fetchModels = async () => {
+    try {
+      const res = await fetch("http://localhost:5001/api/vi/appmodel/fetchAll");
+      const data = await res.json();
+      setModels(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  // 🔹 Handle input
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 🔹 Open Add Modal
+  const handleAdd = () => {
+    setEditModel(null);
+    setFormData({
+      modelName: "",
+      type: "",
+      key: "",
+      value: "",
+      env: "",
+    });
+    setShowModal(true);
+  };
+
+  // 🔹 Open Edit Modal
+  const handleEdit = (model) => {
+    setEditModel(model);
+    setFormData(model);
+    setShowModal(true);
+  };
+
+  // 🔹 Save (Create / Update)
+  const handleSave = async () => {
+    try {
+      const url = editModel
+        ? `http://localhost:5001/api/vi/appmodel/update/${editModel.appModelId}`
+        : "http://localhost:5001/api/vi/appmodel/create";
+
+      const method = editModel ? "PUT" : "POST";
+
+      await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      setShowModal(false);
+      fetchModels();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // 🔹 Delete
+  const handleDelete = async (id) => {
+    try {
+      await fetch(`http://localhost:5001/api/vi/appmodel/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      fetchModels();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="container mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h3>App Models</h3>
+        <Button variant="primary" onClick={handleAdd}>
+          New App Model
+        </Button>
+      </div>
+
+      {/* 🔹 Table */}
+      <Table bordered hover>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Model Name</th>
+            <th>Type</th>
+            <th>Key</th>
+            <th>Value</th>
+            <th>Env</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {models.map((model) => (
+            <tr key={model.appModelId}>
+              <td>{model.appModelId}</td>
+              <td>{model.modelName}</td>
+              <td>{model.type}</td>
+              <td>{model.key}</td>
+              <td>{model.value}</td>
+              <td>{model.env}</td>
+
+              <td>
+                <Button
+                  size="sm"
+                  variant="warning"
+                  className="me-2"
+                  onClick={() => handleEdit(model)}
+                >
+                  Edit
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => handleDelete(model.appModelId)}
+                >
+                  Delete
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      {/* 🔹 Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {editModel ? "Update App Model" : "Add App Model"}
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-2">
+              <Form.Label>Model Name</Form.Label>
+              <Form.Control
+                name="modelName"
+                value={formData.modelName}
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Type</Form.Label>
+              <Form.Control
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Key</Form.Label>
+              <Form.Control
+                name="key"
+                value={formData.key}
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Value</Form.Label>
+              <Form.Control
+                name="value"
+                value={formData.value}
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Env</Form.Label>
+              <Form.Select
+                name="env"
+                value={formData.env}
+                onChange={handleChange}
+              >
+                <option value="">Select Environment</option>
+                <option value="QA">QA</option>
+                <option value="DEV">DEV</option>
+                <option value="UAT">UAT</option>
+                <option value="PROD">PROD</option>
+              </Form.Select>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="success" onClick={handleSave}>
+            Save
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+};
+
+export default AppModelPage;
