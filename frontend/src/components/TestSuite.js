@@ -292,7 +292,7 @@ const TestSuiteList = () => {
         <div className="col-2">
           <button
             style={{ float: "right" }} // ✅ FIX
-            className="btn btn-success"
+            className="btn btn-primary"
             data-bs-toggle="modal"
             data-bs-target="#createSuiteModal"
           >
@@ -302,7 +302,7 @@ const TestSuiteList = () => {
       </div>
       <ul className="list-group mt-3">
         {/* Header Row */}
-        <li className="list-group-item d-flex justify-content-between align-items-center bg-dark text-white fw-bold">
+        <li className="list-group-item d-flex justify-content-between align-items-center bg-white text-black fw-bold">
           <div className="me-3">
             <span>Test Suite</span>
           </div>
@@ -338,11 +338,11 @@ const TestSuiteList = () => {
                 data-bs-target="#testCaseModal"
                 onClick={() => handleView(suite.testSuiteId)}
               >
-                View
+                Test Case List
               </button>
 
               <button
-                className="btn btn-sm btn-primary"
+                className="btn btn-sm btn-warning"
                 onClick={() => handleUpdateSuite(suite)}
               >
                 Update

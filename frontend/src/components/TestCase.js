@@ -36,16 +36,11 @@ const TestCase = () => {
       const data = await res.json();
       console.log("Created:", data);
 
-      // ✅ Reset form
       setNewTestCase({
         testCaseName: "",
         testScriptId: "",
       });
-
-      // ✅ Close modal
       document.getElementById("closeModalBtn").click();
-
-      // ✅ Refresh list
       fetchTestCases();
     } catch (err) {
       console.error("Error adding test case:", err);
@@ -145,7 +140,7 @@ const TestCase = () => {
         <h4>Test Cases</h4>
 
         <button
-          className="btn btn-success"
+          className="btn btn-primary"
           data-bs-toggle="modal"
           data-bs-target="#addTestCaseModal"
         >
@@ -154,7 +149,7 @@ const TestCase = () => {
       </div>
 
       <table className="table table-bordered table-hover mt-3">
-        <thead className="table-dark">
+        <thead className="table">
           <tr>
             <th>ID</th>
             <th>Name</th>
@@ -173,10 +168,10 @@ const TestCase = () => {
 
                 <td style={{ float: "right" }}>
                   <button
-                    className="btn btn-sm btn-primary me-2"
+                    className="btn btn-sm btn-warning me-2"
                     onClick={() => handleUpdate(tc)}
                   >
-                    Update
+                    Edit
                   </button>
 
                   <button
