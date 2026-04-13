@@ -92,4 +92,57 @@ router.get("/fetchActivityByTestScriptId/:id", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const updated = await ExpectedResult.findOneAndUpdate(
+      { expectedResultId: id },
+      { $set: req.body },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Expected Result not found",
+      });
+    }
+
+    res.json({
+      message: "Expected Result updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error updating Expected Result",
+    });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const deleted = await ExpectedResult.findOneAndDelete({
+      expectedResultId: id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Expected Result not found",
+      });
+    }
+
+    res.json({
+      message: "Expected Result deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error deleting Expected Result",
+    });
+  }
+});
+
 module.exports = router;
