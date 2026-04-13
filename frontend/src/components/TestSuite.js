@@ -15,6 +15,9 @@ const TestSuiteList = () => {
   const [addStatus, setAddStatus] = useState("");
   const [env, setEnv] = useState("QA");
 
+  const [newSuiteName, setNewSuiteName] = useState("");
+  const [createStatus, setCreateStatus] = useState("");
+
   // Fetch all test suites
   useEffect(() => {
     const fetchTestSuites = async () => {
@@ -33,6 +36,43 @@ const TestSuiteList = () => {
 
     fetchTestSuites();
   }, []);
+
+  const handleCreateSuite = async () => {
+    if (!newSuiteName.trim()) {
+      setCreateStatus("Please enter test suite name");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5001/api/vi/testSuite/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          testSuiteName: newSuiteName,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to create");
+      }
+
+      setCreateStatus("✅ Created successfully");
+
+      // ✅ Add to UI instantly
+      setTestSuites((prev) => [
+        ...prev,
+        { testSuiteId: data.testSuiteId, testSuiteName: newSuiteName },
+      ]);
+
+      setNewSuiteName("");
+    } catch (err) {
+      setCreateStatus("❌ " + err.message);
+    }
+  };
 
   const handleDeleteMapping = async (testCaseId, env) => {
     const confirmDelete = window.confirm(
@@ -177,7 +217,13 @@ const TestSuiteList = () => {
   return (
     <div className="container mt-4">
       <h3>Test Suites</h3>
-
+      <button
+        className="btn btn-success"
+        data-bs-toggle="modal"
+        data-bs-target="#createSuiteModal"
+      >
+        + Add Test Suite
+      </button>
       <ul className="list-group">
         {testSuites.map((suite) => (
           <li
@@ -212,6 +258,45 @@ const TestSuiteList = () => {
           </li>
         ))}
       </ul>
+
+      {/* /* */}
+      <div className="modal fade" id="createSuiteModal" tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            {/* Header */}
+            <div className="modal-header">
+              <h5 className="modal-title">Create Test Suite</h5>
+              <button className="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            {/* Body */}
+            <div className="modal-body">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Test Suite Name"
+                value={newSuiteName}
+                onChange={(e) => setNewSuiteName(e.target.value)}
+              />
+
+              {createStatus && (
+                <small className="mt-2 d-block">{createStatus}</small>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="modal-footer">
+              <button className="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button className="btn btn-primary" onClick={handleCreateSuite}>
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ✅ Modal */}
       <div className="modal fade" id="testCaseModal">

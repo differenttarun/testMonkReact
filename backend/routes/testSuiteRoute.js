@@ -11,7 +11,7 @@ router.post("/create", async (req, res) => {
     await testSuite.save();
     return res.json({
       message: "Test Suite created successfully",
-      id: testSuite.testSuiteId, // auto-generated ID
+      testSuiteId: testSuite.testSuiteId, // auto-generated ID
       _id: testSuite._id, // MongoDB default ID
     });
   } catch (err) {
@@ -30,7 +30,7 @@ router.delete("/delete/:id", async (req, res) => {
       });
     }
 
-    const mappingResult = await Mapping.deleteMany({
+    const mappingResult = await TestSuiteTestCaseMapping.deleteMany({
       testSuiteId: suiteId,
     });
 
@@ -149,11 +149,11 @@ router.get("/fetchTestCasesBySuiteId/:id", async (req, res) => {
       },
     ]);
 
-    if (!result.length) {
-      return res.status(404).json({
-        message: `Suite with id ${suiteId} not found`,
-      });
-    }
+    // if (!result.length) {
+    //   return res.status(404).json({
+    //     message: `Suite with id ${suiteId} not found`,
+    //   });
+    // }
 
     res.json(result[0]);
   } catch (err) {
