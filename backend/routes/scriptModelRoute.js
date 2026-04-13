@@ -84,4 +84,47 @@ router.get("/fetchByModelName/:model", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const updated = await ScriptModel.findOneAndUpdate(
+      { scriptModelId: Number(req.params.id) },
+      { $set: req.body },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Script Model not found",
+      });
+    }
+
+    res.json({
+      message: "Updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating Script Model" });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const deleted = await ScriptModel.findOneAndDelete({
+      scriptModelId: Number(req.params.id),
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Script Model not found",
+      });
+    }
+
+    res.json({
+      message: "Deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting Script Model" });
+  }
+});
+
 module.exports = router;

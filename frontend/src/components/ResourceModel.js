@@ -105,7 +105,7 @@ const ResourceModelPage = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3>Resource Models</h3>
         <Button variant="primary" onClick={handleAdd}>
-          + Add Resource Model
+          New Resource Model
         </Button>
       </div>
 

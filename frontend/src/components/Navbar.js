@@ -45,6 +45,16 @@ const Navbar = () => {
             </li>
             <li className="nav-item">
               <NavLink
+                to="/scriptModel"
+                className={({ isActive }) =>
+                  "nav-link " + (isActive ? "active fw-bold text-primary" : "")
+                }
+              >
+                Script Model
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
                 to="/appModel"
                 className={({ isActive }) =>
                   "nav-link " + (isActive ? "active fw-bold text-primary" : "")
