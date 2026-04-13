@@ -19,6 +19,49 @@ router.post("/create", async (req, res) => {
   }
 });
 
+// ROUTE 1  create Test Suite
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const suiteId = Number(req.params.id);
+
+    if (!suiteId) {
+      return res.status(400).json({
+        message: "Invalid testSuiteId",
+      });
+    }
+
+    const mappingResult = await Mapping.deleteMany({
+      testSuiteId: suiteId,
+    });
+
+    console.log(
+      `Deleted ${mappingResult.deletedCount} mappings for suite ${suiteId}`,
+    );
+
+    const deletedSuite = await TestSuite.findOneAndDelete({
+      testSuiteId: suiteId,
+    });
+
+    if (!deletedSuite) {
+      return res.status(404).json({
+        message: `Test Suite with id ${suiteId} not found`,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Test Suite deleted successfully",
+      data: deletedSuite,
+    });
+  } catch (error) {
+    console.error("Delete Error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
+
 // ROUTE 2:  get All suites
 router.get("/fetchAllSuites", async (req, res) => {
   try {
@@ -55,15 +98,14 @@ router.get("/fetchSuiteById/:id", async (req, res) => {
   }
 });
 
-// ROUTE 4:  get Cases  by test suite id  id
 router.get("/fetchTestCasesBySuiteId/:id", async (req, res) => {
   try {
-    // convert to number as needed in aggrigation
     const suiteId = Number(req.params.id);
 
     const result = await TestSuite.aggregate([
       { $match: { testSuiteId: suiteId } },
 
+      // 🔹 Step 1: Get mappings
       {
         $lookup: {
           from: "testsuitetestcasemappings",
@@ -73,20 +115,36 @@ router.get("/fetchTestCasesBySuiteId/:id", async (req, res) => {
         },
       },
 
+      // 🔹 Step 2: Unwind mappings (VERY IMPORTANT)
+      { $unwind: "$mappings" },
+
+      // 🔹 Step 3: Lookup test case for each mapping
       {
         $lookup: {
           from: "testcases",
           localField: "mappings.testCaseId",
           foreignField: "testCaseId",
-          as: "testCaseList",
+          as: "testCase",
         },
       },
 
+      // 🔹 Step 4: Unwind testCase
+      { $unwind: "$testCase" },
+
+      // 🔹 Step 5: Merge env into test case
       {
-        $project: {
-          testSuiteId: 1,
-          testSuiteName: 1,
-          testCaseList: 1,
+        $addFields: {
+          "testCase.env": "$mappings.env",
+        },
+      },
+
+      // 🔹 Step 6: Group back into list
+      {
+        $group: {
+          _id: "$_id",
+          testSuiteId: { $first: "$testSuiteId" },
+          testSuiteName: { $first: "$testSuiteName" },
+          testCaseList: { $push: "$testCase" },
         },
       },
     ]);
@@ -98,9 +156,9 @@ router.get("/fetchTestCasesBySuiteId/:id", async (req, res) => {
     }
 
     res.json(result[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error fetching data" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 });
 

@@ -7,7 +7,6 @@ const TestSuite = require("../models/TestSuite");
 router.post("/create", async (req, res) => {
   try {
     const testSuiteTestCaseMapping = TestSuiteTestCaseMapping(req.body);
-
     const testCase = await TestCase.findOne({
       testCaseId: req.body.testCaseId,
     });
@@ -42,6 +41,39 @@ router.post("/create", async (req, res) => {
     return res.status(500).json({
       message: "Something went wrong",
       error: error.message,
+    });
+  }
+});
+
+// DELETE mapping
+router.post("/delete", async (req, res) => {
+  try {
+    const { testSuiteId, testCaseId, env } = req.body;
+
+    if (!testSuiteId || !testCaseId || !env) {
+      return res.status(400).json({
+        message: "testSuiteId, testCaseId and env are required",
+      });
+    }
+
+    const deleted = await TestSuiteTestCaseMapping.findOneAndDelete({
+      testSuiteId,
+      testCaseId,
+      env,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Mapping not found",
+      });
+    }
+
+    res.json({
+      message: "Mapping deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
     });
   }
 });
