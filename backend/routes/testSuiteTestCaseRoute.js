@@ -78,4 +78,55 @@ router.post("/delete", async (req, res) => {
   }
 });
 
+router.get("/fetchTestCasesBySuiteIdAndEnv/:id/:env", async (req, res) => {
+  try {
+    const suiteId = Number(req.params.id);
+    const env = req.params.env;
+
+    const result = await TestSuiteTestCaseMapping.aggregate([
+      // ✅ Step 1: Filter by suite + env
+      {
+        $match: {
+          testSuiteId: suiteId,
+          env: env,
+        },
+      },
+
+      // ✅ Step 2: Lookup test case
+      {
+        $lookup: {
+          from: "testcases",
+          localField: "testCaseId",
+          foreignField: "testCaseId",
+          as: "testCase",
+        },
+      },
+
+      // ✅ Step 3: Unwind testCase
+      { $unwind: "$testCase" },
+
+      // ✅ Step 4: Attach env to test case
+      {
+        $addFields: {
+          "testCase.env": "$env",
+        },
+      },
+
+      // ✅ Step 5: Group into list
+      {
+        $group: {
+          _id: "$testSuiteId",
+          testSuiteId: { $first: "$testSuiteId" },
+          testCaseList: { $push: "$testCase" },
+        },
+      },
+    ]);
+
+    res.json(result[0] || { testSuiteId: suiteId, testCaseList: [] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

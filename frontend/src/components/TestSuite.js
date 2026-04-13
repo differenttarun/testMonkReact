@@ -69,6 +69,11 @@ const TestSuiteList = () => {
       ]);
 
       setNewSuiteName("");
+      // ✅ CLOSE MODAL
+      const modalElement = document.getElementById("createSuiteModal");
+      const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+
+      modalInstance.hide();
     } catch (err) {
       setCreateStatus("❌ " + err.message);
     }
@@ -216,14 +221,22 @@ const TestSuiteList = () => {
 
   return (
     <div className="container mt-4">
-      <h3>Test Suites</h3>
-      <button
-        className="btn btn-success"
-        data-bs-toggle="modal"
-        data-bs-target="#createSuiteModal"
-      >
-        + Add Test Suite
-      </button>
+      <div className="row my-1">
+        <div className="col-10">
+          <h3>Test Suites</h3>
+        </div>
+        <div className="col-2">
+          <button
+            style={{ float: "right" }} // ✅ FIX
+            className="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#createSuiteModal"
+          >
+            New Suite
+          </button>
+        </div>
+      </div>
+
       <ul className="list-group">
         {testSuites.map((suite) => (
           <li
