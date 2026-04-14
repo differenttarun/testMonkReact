@@ -10,6 +10,9 @@ const TestScriptPage = () => {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activities, setActivities] = useState([]);
   const [selectedScript, setSelectedScript] = useState(null);
+  const [originalData, setOriginalData] = useState({
+    testScriptName: "",
+  });
 
   const [formData, setFormData] = useState({
     testScriptName: "",
@@ -84,11 +87,17 @@ const TestScriptPage = () => {
 
       if (!res.ok) throw new Error("Save failed");
 
-      // ✅ Reset dirty flag locally
+      const savedActivity = await res.json();
+
       setActivities((prev) =>
         prev.map((a) =>
           a.activityId === activity.activityId
-            ? { ...a, isDirty: false, isNew: false }
+            ? {
+                ...a, // 🔥 KEEP existing values
+                ...savedActivity, // 🔥 ADD backend fields (_id etc.)
+                isDirty: false,
+                isNew: false,
+              }
             : a,
         ),
       );
@@ -134,15 +143,19 @@ const TestScriptPage = () => {
   const handleAdd = () => {
     setEditScript(null);
     setFormData({ testScriptName: "" });
+    setOriginalData({ testScriptName: "" });
     setShowModal(true);
   };
 
-  // 🔹 Edit
   const handleEdit = (script) => {
     setEditScript(script);
-    setFormData({
+
+    const data = {
       testScriptName: script.testScriptName,
-    });
+    };
+
+    setFormData(data);
+    setOriginalData(data); // 👈 store original
     setShowModal(true);
   };
 
@@ -226,6 +239,9 @@ const TestScriptPage = () => {
       console.error(err);
     }
   };
+  const isChanged =
+    formData.testScriptName !== originalData.testScriptName &&
+    formData.testScriptName.trim() !== "";
 
   return (
     <div className="container mt-4">
@@ -313,7 +329,7 @@ const TestScriptPage = () => {
             <i className="bi bi-x-circle"></i>
           </Button>
 
-          <Button variant="success" onClick={handleSave}>
+          <Button variant="success" onClick={handleSave} disabled={!isChanged}>
             <i className="bi bi-save"></i>
           </Button>
         </Modal.Footer>
