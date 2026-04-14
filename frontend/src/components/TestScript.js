@@ -22,7 +22,12 @@ const TestScriptPage = () => {
 
   const functionOptionsMap = {
     core: ["smartcompare", "getExpectedResults"],
-    selenium: ["launchApplication", "getUIValue", "enterUIValue"],
+    selenium: [
+      "launchApplication",
+      "getUIValue",
+      "enterUIValue",
+      "clickButton",
+    ],
   };
 
   const modelOptions = ["SYNE", "FAST"];
