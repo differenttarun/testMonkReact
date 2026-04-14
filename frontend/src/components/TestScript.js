@@ -342,7 +342,7 @@ const TestScriptPage = () => {
       <Modal
         show={showActivityModal}
         onHide={() => setShowActivityModal(false)}
-        size="lg"
+        fullscreen
         dialogClassName="custom-modal"
       >
         <Modal.Header closeButton>
