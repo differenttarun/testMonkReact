@@ -60,7 +60,7 @@ router.get("/fetchActivityByTestScriptId/:id", async (req, res) => {
 
     const activities = await Activity.find({
       testScriptId: req.params.id,
-    });
+    }).sort({ actOrder: 1 }); // 🔥 ascending order
 
     if (!activities) {
       return res
@@ -129,6 +129,26 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(500).json({
       message: "Error deleting activity",
     });
+  }
+});
+
+router.put("/reorder", async (req, res) => {
+  try {
+    const updates = req.body;
+
+    const bulkOps = updates.map((item) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: { $set: { actOrder: item.actOrder } },
+      },
+    }));
+
+    await Activity.bulkWrite(bulkOps);
+
+    res.json({ message: "Order updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 });
 module.exports = router;

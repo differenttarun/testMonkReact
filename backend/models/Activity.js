@@ -32,6 +32,11 @@ const activitySchema = Schema({
   use: {
     type: String,
   },
+  actOrder: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
 
   createdDate: {
     type: Date,
