@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const TestCase = () => {
   const [testCases, setTestCases] = useState([]);
+  const [testScripts, setTestScripts] = useState([]);
   const [newTestCase, setNewTestCase] = useState({
     testCaseName: "",
     testScriptId: "",
@@ -92,6 +93,18 @@ const TestCase = () => {
     });
   };
 
+  const fetchTestScripts = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:5001/api/vi/testScript/fetchAllTestScript",
+      );
+      const data = await res.json();
+      setTestScripts(data);
+    } catch (err) {
+      console.error("Error fetching test scripts", err);
+    }
+  };
+
   const handleSaveUpdate = async () => {
     try {
       const res = await fetch(
@@ -143,6 +156,7 @@ const TestCase = () => {
           className="btn btn-primary"
           data-bs-toggle="modal"
           data-bs-target="#addTestCaseModal"
+          onClick={fetchTestScripts}
         >
           New Test Case
         </button>
@@ -223,13 +237,20 @@ const TestCase = () => {
 
               <div className="mb-3">
                 <label className="form-label">Test Script ID</label>
-                <input
-                  type="number"
-                  className="form-control"
+                <select
+                  className="form-select"
                   name="testScriptId"
                   value={newTestCase.testScriptId}
                   onChange={handleChange}
-                />
+                >
+                  <option value="">Select Test Script</option>
+
+                  {testScripts.map((ts) => (
+                    <option key={ts.testScriptId} value={ts.testScriptId}>
+                      {ts.testScriptId} - {ts.testScriptName}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
