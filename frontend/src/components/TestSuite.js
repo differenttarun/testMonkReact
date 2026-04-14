@@ -467,7 +467,8 @@ const TestSuiteList = () => {
                     <li key={tc._id} className="list-group-item">
                       <div className="d-flex justify-content-between">
                         <div>
-                          <h6>{tc.testCaseName}</h6>
+                          <h6>{"TestCaseID: " + tc.testCaseId}</h6>
+                          <h6>{"TestCase Name: " + tc.testCaseName}</h6>
 
                           <small>{"ENV : " + tc.env + " "}</small>
                           <small>

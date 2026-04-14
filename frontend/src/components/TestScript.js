@@ -25,7 +25,65 @@ const TestScriptPage = () => {
       if (!res.ok) throw new Error("Failed to fetch activities");
 
       const data = await res.json();
-      setActivities(data || []);
+      setActivities(data.activityList || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteActivity = async (_id) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5001/api/vi/activity/delete/${_id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!res.ok) throw new Error("Delete failed");
+
+      // remove from UI
+      setActivities((prev) => prev.filter((a) => a._id !== _id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateActivity = async (activity) => {
+    try {
+      const isNew = activity.isNew;
+
+      const url = isNew
+        ? "http://localhost:5001/api/vi/activity/create"
+        : `http://localhost:5001/api/vi/activity/update/${activity.activityId}`;
+
+      const method = isNew ? "POST" : "PUT";
+
+      const { _id, isNew: _, isDirty, ...cleanActivity } = activity;
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...cleanActivity,
+          testScriptId: selectedScript.testScriptId,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Save failed");
+
+      // ✅ Reset dirty flag locally
+      setActivities((prev) =>
+        prev.map((a) =>
+          a.activityId === activity.activityId
+            ? { ...a, isDirty: false, isNew: false }
+            : a,
+        ),
+      );
+
+      alert(isNew ? "Created successfully" : "Updated successfully");
     } catch (err) {
       console.error(err);
     }
@@ -102,6 +160,40 @@ const TestScriptPage = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleAddActivity = () => {
+    // get max activityId from existing list
+    const maxId =
+      activities && activities.length > 0
+        ? Math.max(...activities.map((a) => Number(a.activityId) || 0))
+        : 0;
+
+    const newActivity = {
+      activityId: maxId + 1, // ✅ next ID
+      testScriptId: selectedScript.testScriptId,
+      activityName: "",
+      library: "",
+      function: "",
+      model: "",
+      set: "",
+      use: "",
+      isNew: true,
+    };
+
+    setActivities((prev) => [
+      ...(Array.isArray(prev) ? prev : []),
+      newActivity,
+    ]);
+  };
+
+  const handleActivityChange = (index, field, value) => {
+    const updated = [...activities];
+
+    updated[index][field] = value;
+    updated[index].isDirty = true; // ✅ mark as modified
+
+    setActivities(updated);
   };
 
   // 🔹 Delete
@@ -214,11 +306,21 @@ const TestScriptPage = () => {
         show={showActivityModal}
         onHide={() => setShowActivityModal(false)}
         size="lg"
+        dialogClassName="custom-modal"
       >
         <Modal.Header closeButton>
           <Modal.Title>
             Activities - {selectedScript?.testScriptName}
           </Modal.Title>
+
+          <Button
+            variant="primary"
+            size="sm"
+            className="ms-3"
+            onClick={handleAddActivity}
+          >
+            + Add Activity
+          </Button>
         </Modal.Header>
 
         <Modal.Body>
@@ -229,19 +331,119 @@ const TestScriptPage = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Activity Name</th>
-                  <th>Type</th>
-                  <th>Value</th>
+                  <th>Name</th>
+                  <th>Library</th>
+                  <th>Function</th>
+                  <th>Model</th>
+                  <th>Set</th>
+                  <th>Use</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {activities.activityList.map((act) => (
+                {activities.map((act, index) => (
                   <tr key={act.activityId}>
                     <td>{act.activityId}</td>
-                    <td>{act.activityName}</td>
-                    <td>{act.type}</td>
-                    <td>{act.value}</td>
+
+                    <td>
+                      <Form.Control
+                        value={act.activityName}
+                        onChange={(e) =>
+                          handleActivityChange(
+                            index,
+                            "activityName",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      <Form.Control
+                        value={act.library}
+                        onChange={(e) =>
+                          handleActivityChange(index, "library", e.target.value)
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      <Form.Control
+                        value={act.function}
+                        onChange={(e) =>
+                          handleActivityChange(
+                            index,
+                            "function",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      <Form.Control
+                        value={act.model}
+                        onChange={(e) =>
+                          handleActivityChange(index, "model", e.target.value)
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      <Form.Control
+                        value={act.set}
+                        onChange={(e) =>
+                          handleActivityChange(index, "set", e.target.value)
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      <Form.Control
+                        value={act.use}
+                        onChange={(e) =>
+                          handleActivityChange(index, "use", e.target.value)
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      <Button
+                        size="sm"
+                        variant="success"
+                        className="me-2"
+                        disabled={!act.isDirty && !act.isNew} // ✅ key logic
+                        onClick={() => handleUpdateActivity(act)}
+                      >
+                        {act.isNew ? "Create" : "Save"}
+                      </Button>
+
+                      {act.isNew && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="me-2"
+                          onClick={() =>
+                            setActivities((prev) =>
+                              prev.filter(
+                                (a) => a.activityId !== act.activityId,
+                              ),
+                            )
+                          }
+                        >
+                          Cancel
+                        </Button>
+                      )}
+
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleDeleteActivity(act._id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

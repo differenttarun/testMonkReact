@@ -80,4 +80,55 @@ router.get("/fetchActivityByTestScriptId/:id", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const updated = await Activity.findOneAndUpdate(
+      { activityId: id },
+      { $set: req.body },
+      { returnDocument: "after" }, // ✅ NEW way
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Activity not found",
+      });
+    }
+
+    res.json({
+      message: "Activity updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error updating activity",
+    });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = req.params.id; // ⚠️ keep as string (ObjectId)
+
+    const deleted = await Activity.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Activity not found",
+      });
+    }
+
+    res.json({
+      message: "Activity deleted successfully",
+      data: deleted,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error deleting activity",
+    });
+  }
+});
 module.exports = router;
