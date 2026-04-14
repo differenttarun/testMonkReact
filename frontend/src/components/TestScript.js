@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 const TestScriptPage = () => {
   const [scripts, setScripts] = useState([]);
@@ -309,11 +310,11 @@ const TestScriptPage = () => {
 
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
+            <i className="bi bi-x-circle"></i>
           </Button>
 
           <Button variant="success" onClick={handleSave}>
-            Save
+            <i className="bi bi-save"></i>
           </Button>
         </Modal.Footer>
       </Modal>
@@ -334,7 +335,7 @@ const TestScriptPage = () => {
             className="ms-3"
             onClick={handleAddActivity}
           >
-            + Add Activity
+            New Activity
           </Button>
         </Modal.Header>
 
@@ -446,41 +447,61 @@ const TestScriptPage = () => {
                       />
                     </td>
 
-                    <td>
-                      <Button
-                        size="sm"
-                        variant="success"
-                        className="me-2"
-                        disabled={!act.isDirty && !act.isNew} // ✅ key logic
-                        onClick={() => handleUpdateActivity(act)}
-                      >
-                        {act.isNew ? "Create" : "Save"}
-                      </Button>
-
-                      {act.isNew && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="me-2"
-                          onClick={() =>
-                            setActivities((prev) =>
-                              prev.filter(
-                                (a) => a.activityId !== act.activityId,
-                              ),
-                            )
-                          }
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <div className="d-flex align-items-center gap-2">
+                        {/* Save */}
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={<Tooltip>Save</Tooltip>}
                         >
-                          Cancel
-                        </Button>
-                      )}
+                          <Button
+                            size="sm"
+                            variant="success"
+                            disabled={!act.isDirty && !act.isNew}
+                            onClick={() => handleUpdateActivity(act)}
+                          >
+                            <i className="bi bi-save"></i>
+                          </Button>
+                        </OverlayTrigger>
 
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => handleDeleteActivity(act._id)}
-                      >
-                        Delete
-                      </Button>
+                        {/* Cancel */}
+                        {act.isNew && (
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Cancel</Tooltip>}
+                          >
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                setActivities((prev) =>
+                                  prev.filter(
+                                    (a) => a.activityId !== act.activityId,
+                                  ),
+                                )
+                              }
+                            >
+                              <i className="bi bi-x-circle"></i>
+                            </Button>
+                          </OverlayTrigger>
+                        )}
+
+                        {/* Delete */}
+                        {!act.isNew && (
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Delete</Tooltip>}
+                          >
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() => handleDeleteActivity(act._id)}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          </OverlayTrigger>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
