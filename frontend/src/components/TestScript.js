@@ -14,6 +14,15 @@ const TestScriptPage = () => {
     testScriptName: "",
   });
 
+  const libraryOptions = ["core", "selenium"];
+
+  const functionOptionsMap = {
+    core: ["smartcompare", "getExpectedResults"],
+    selenium: ["launchApplication", "getUIValue", "enterUIValue"],
+  };
+
+  const modelOptions = ["SYNE", "FAST"];
+
   const baseUrl = "http://localhost:5001/api/vi/testscript";
 
   const fetchActivities = async (scriptId) => {
@@ -191,7 +200,13 @@ const TestScriptPage = () => {
     const updated = [...activities];
 
     updated[index][field] = value;
-    updated[index].isDirty = true; // ✅ mark as modified
+
+    // 🔥 reset function when library changes
+    if (field === "library") {
+      updated[index]["function"] = "";
+    }
+
+    updated[index].isDirty = true;
 
     setActivities(updated);
   };
@@ -360,17 +375,24 @@ const TestScriptPage = () => {
                     </td>
 
                     <td>
-                      <Form.Control
-                        value={act.library}
+                      <Form.Select
+                        value={act.library || ""}
                         onChange={(e) =>
                           handleActivityChange(index, "library", e.target.value)
                         }
-                      />
+                      >
+                        <option value="">Select Library</option>
+                        {libraryOptions.map((lib) => (
+                          <option key={lib} value={lib}>
+                            {lib}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </td>
 
                     <td>
-                      <Form.Control
-                        value={act.function}
+                      <Form.Select
+                        value={act.function || ""}
                         onChange={(e) =>
                           handleActivityChange(
                             index,
@@ -378,16 +400,32 @@ const TestScriptPage = () => {
                             e.target.value,
                           )
                         }
-                      />
+                        disabled={!act.library} // 🔥 disable until library selected
+                      >
+                        <option value="">Select Function</option>
+
+                        {(functionOptionsMap[act.library] || []).map((fn) => (
+                          <option key={fn} value={fn}>
+                            {fn}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </td>
 
                     <td>
-                      <Form.Control
-                        value={act.model}
+                      <Form.Select
+                        value={act.model || ""}
                         onChange={(e) =>
                           handleActivityChange(index, "model", e.target.value)
                         }
-                      />
+                      >
+                        <option value="">Select Model</option>
+                        {modelOptions.map((model) => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </td>
 
                     <td>
