@@ -399,11 +399,13 @@ const TestScriptPage = () => {
         fullscreen
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            Activities - {selectedScript?.testScriptName}
-          </Modal.Title>
+          <div className="d-flex justify-content-between align-items-center w-100">
+            <Modal.Title className="mb-0">
+              Activities - {selectedScript?.testScriptName}
+            </Modal.Title>
 
-          <Button onClick={handleAddActivity}>New Activity</Button>
+            <Button onClick={handleAddActivity}>New Activity</Button>
+          </div>
         </Modal.Header>
 
         <Modal.Body>
