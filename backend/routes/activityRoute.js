@@ -168,4 +168,55 @@ router.put("/reorder", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// PUT /api/vi/activity/updateOrder
+router.put("/updateOrder", async (req, res) => {
+  try {
+    const { activities } = req.body;
+
+    // =========================
+    // 1. VALIDATION
+    // =========================
+    if (!Array.isArray(activities) || activities.length === 0) {
+      return res.status(400).json({
+        message: "Activities array is required",
+      });
+    }
+
+    // ensure all have _id + actOrder
+    for (const a of activities) {
+      if (!a._id || typeof a.actOrder !== "number") {
+        return res.status(400).json({
+          message: "Each activity must have _id and actOrder",
+        });
+      }
+    }
+
+    // =========================
+    // 2. BULK UPDATE
+    // =========================
+    const bulkOps = activities.map((a) => ({
+      updateOne: {
+        filter: { _id: a._id },
+        update: { $set: { actOrder: a.actOrder } },
+      },
+    }));
+
+    const result = await Activity.bulkWrite(bulkOps);
+
+    // =========================
+    // 3. RESPONSE
+    // =========================
+    res.json({
+      message: "Order updated successfully",
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (err) {
+    console.error("Update order error:", err);
+    res.status(500).json({
+      message: "Failed to update order",
+      error: err.message,
+    });
+  }
+});
 module.exports = router;

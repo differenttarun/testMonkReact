@@ -1,11 +1,21 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
 
 const TestScriptPage = () => {
   const [scripts, setScripts] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editScript, setEditScript] = useState(null);
+  const [originalOrder, setOriginalOrder] = useState([]);
 
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activities, setActivities] = useState([]);
@@ -144,9 +154,47 @@ const TestScriptPage = () => {
       }));
 
       setActivities(normalized);
+
+      // ✅ store original order
+      setOriginalOrder(normalized.map((a) => a._id));
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const saveOrderToBackend = async () => {
+    try {
+      const payload = activities.map((a, index) => ({
+        _id: a._id,
+        actOrder: index + 1,
+      }));
+
+      const res = await fetch(
+        "http://localhost:5001/api/vi/activity/updateOrder",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ activities: payload }),
+        },
+      );
+
+      if (!res.ok) throw new Error("Order update failed");
+
+      alert("Order saved successfully");
+
+      // ✅ reset original order after save
+      setOriginalOrder(activities.map((a) => a._id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const isOrderChanged = () => {
+    const currentOrder = activities.map((a) => a._id);
+
+    if (currentOrder.length !== originalOrder.length) return true;
+
+    return currentOrder.some((id, index) => id !== originalOrder[index]);
   };
 
   const handleViewActivities = async (script) => {
@@ -319,6 +367,43 @@ const TestScriptPage = () => {
       alert("Failed to save activity");
     }
   };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = activities.findIndex((a) => a.activityId === active.id);
+
+    const newIndex = activities.findIndex((a) => a.activityId === over.id);
+
+    const updated = arrayMove(activities, oldIndex, newIndex).map((a, i) => ({
+      ...a,
+      actOrder: i + 1,
+      isDirty: true,
+    }));
+
+    setActivities(updated);
+  };
+
+  const SortableRow = ({ act, index, children }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } =
+      useSortable({ id: act.activityId });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    return (
+      <tr ref={setNodeRef} style={style}>
+        <td {...attributes} {...listeners} style={{ cursor: "grab" }}>
+          ☰
+        </td>
+        {children}
+      </tr>
+    );
+  };
   // =========================
   // UI
   // =========================
@@ -412,6 +497,15 @@ const TestScriptPage = () => {
           <Table bordered hover>
             <thead>
               <tr>
+                <th>
+                  <Button
+                    variant="warning"
+                    onClick={saveOrderToBackend}
+                    disabled={!isOrderChanged()}
+                  >
+                    SO
+                  </Button>
+                </th>
                 <th>Seq</th>
                 <th>Name</th>
                 <th>Library</th>
@@ -423,121 +517,132 @@ const TestScriptPage = () => {
               </tr>
             </thead>
 
-            <tbody>
-              {sortedActivities.map((act, index) => (
-                <tr key={act.activityId}>
-                  {/* ORDER COLUMN */}
-                  <td>{act.actOrder}</td>
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={activities.map((a) => a.activityId)}
+                strategy={verticalListSortingStrategy}
+              >
+                <tbody>
+                  {activities
+                    .sort((a, b) => a.actOrder - b.actOrder)
+                    .map((act, index) => (
+                      <SortableRow key={act.activityId} act={act} index={index}>
+                        <td>{act.actOrder}</td>
 
-                  <td>
-                    <Form.Control
-                      value={act.activityName}
-                      onChange={(e) =>
-                        handleActivityChange(
-                          index,
-                          "activityName",
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </td>
+                        <td>
+                          <Form.Control
+                            value={act.activityName}
+                            onChange={(e) =>
+                              handleActivityChange(
+                                index,
+                                "activityName",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </td>
 
-                  <td>
-                    <Form.Select
-                      value={act.library || ""}
-                      onChange={(e) =>
-                        handleActivityChange(index, "library", e.target.value)
-                      }
-                    >
-                      <option value="">Select</option>
-                      {libraryOptions.map((l) => (
-                        <option key={l}>{l}</option>
-                      ))}
-                    </Form.Select>
-                  </td>
+                        <td>
+                          <Form.Select
+                            value={act.library || ""}
+                            onChange={(e) =>
+                              handleActivityChange(
+                                index,
+                                "library",
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value="">Select</option>
+                            {libraryOptions.map((l) => (
+                              <option key={l}>{l}</option>
+                            ))}
+                          </Form.Select>
+                        </td>
 
-                  <td>
-                    <Form.Select
-                      value={act.function || ""}
-                      disabled={!act.library}
-                      onChange={(e) =>
-                        handleActivityChange(index, "function", e.target.value)
-                      }
-                    >
-                      <option value="">Select</option>
-                      {(functionOptionsMap[act.library] || []).map((f) => (
-                        <option key={f}>{f}</option>
-                      ))}
-                    </Form.Select>
-                  </td>
+                        <td>
+                          <Form.Select
+                            value={act.function || ""}
+                            disabled={!act.library}
+                            onChange={(e) =>
+                              handleActivityChange(
+                                index,
+                                "function",
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value="">Select</option>
+                            {(functionOptionsMap[act.library] || []).map(
+                              (f) => (
+                                <option key={f}>{f}</option>
+                              ),
+                            )}
+                          </Form.Select>
+                        </td>
 
-                  <td>
-                    <Form.Select
-                      value={act.model || ""}
-                      onChange={(e) =>
-                        handleActivityChange(index, "model", e.target.value)
-                      }
-                    >
-                      <option value="">Select</option>
-                      {modelOptions.map((m) => (
-                        <option key={m}>{m}</option>
-                      ))}
-                    </Form.Select>
-                  </td>
+                        <td>
+                          <Form.Select
+                            value={act.model || ""}
+                            onChange={(e) =>
+                              handleActivityChange(
+                                index,
+                                "model",
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value="">Select</option>
+                            {modelOptions.map((m) => (
+                              <option key={m}>{m}</option>
+                            ))}
+                          </Form.Select>
+                        </td>
 
-                  <td>
-                    <Form.Control
-                      value={act.set}
-                      onChange={(e) =>
-                        handleActivityChange(index, "set", e.target.value)
-                      }
-                    />
-                  </td>
+                        <td>
+                          <Form.Control
+                            value={act.set}
+                            onChange={(e) =>
+                              handleActivityChange(index, "set", e.target.value)
+                            }
+                          />
+                        </td>
 
-                  <td>
-                    <Form.Control
-                      value={act.use}
-                      onChange={(e) =>
-                        handleActivityChange(index, "use", e.target.value)
-                      }
-                    />
-                  </td>
+                        <td>
+                          <Form.Control
+                            value={act.use}
+                            onChange={(e) =>
+                              handleActivityChange(index, "use", e.target.value)
+                            }
+                          />
+                        </td>
 
-                  <td className="d-flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="success"
-                      disabled={!act.isDirty && !act.isNew}
-                      onClick={() => handleUpdateActivity(act)}
-                    >
-                      Save
-                    </Button>
+                        <td className="d-flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="success"
+                            disabled={!act.isDirty && !act.isNew}
+                            onClick={() => handleUpdateActivity(act)}
+                          >
+                            Save
+                          </Button>
 
-                    {act.isNew ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          setActivities((prev) =>
-                            prev.filter((a) => a.activityId !== act.activityId),
-                          )
-                        }
-                      >
-                        Cancel
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => handleDeleteActivity(act)}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDeleteActivity(act)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </SortableRow>
+                    ))}
+                </tbody>
+              </SortableContext>
+            </DndContext>
           </Table>
         </Modal.Body>
 
