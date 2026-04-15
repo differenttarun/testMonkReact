@@ -343,6 +343,7 @@ const TestScriptPage = () => {
         show={showActivityModal}
         onHide={() => setShowActivityModal(false)}
         fullscreen
+        scrollable
         dialogClassName="custom-modal"
       >
         <Modal.Header closeButton>
