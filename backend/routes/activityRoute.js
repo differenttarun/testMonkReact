@@ -5,18 +5,35 @@ const router = express.Router();
 // ROUTE 1: create test script
 router.post("/create", async (req, res) => {
   try {
-    const activity = Activity(req.body);
-    await activity.save();
-    return res.json({
+    // =========================
+    // 1. CLEAN INPUT (VERY IMPORTANT)
+    //    Remove any frontend-sent _id
+    // =========================
+    const { _id, ...cleanBody } = req.body;
+
+    const activity = new Activity(cleanBody);
+
+    const savedActivity = await activity.save();
+
+    return res.status(201).json({
       message: "Activity created successfully",
-      id: activity.activityId, // auto-generated ID
-      _id: activity._id, // MongoDB default ID
+
+      // ✅ return identifiers
+      id: savedActivity.activityId,
+      _id: savedActivity._id,
+
+      // ✅ return full object for UI sync
+      activity: savedActivity,
     });
   } catch (err) {
-    console.error("Error while Generating activity:  " + err);
+    console.error("Error while creating activity:", err);
+
+    return res.status(500).json({
+      message: "Error while creating activity",
+      error: err.message,
+    });
   }
 });
-
 // ROUTE 2: get All test script
 router.get("/fetchAllActivities", async (req, res) => {
   try {
@@ -82,10 +99,10 @@ router.get("/fetchActivityByTestScriptId/:id", async (req, res) => {
 
 router.put("/update/:id", async (req, res) => {
   try {
-    const id = Number(req.params.id);
+    const id = req.params.id;
 
     const updated = await Activity.findOneAndUpdate(
-      { activityId: id },
+      { _id: id },
       { $set: req.body },
       { returnDocument: "after" }, // ✅ NEW way
     );
