@@ -1,18 +1,14 @@
 import { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import { DndContext, closestCenter } from "@dnd-kit/core";
-
 import {
   arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-
 import { CSS } from "@dnd-kit/utilities";
 
-// ✅ FIXED: Moved outside TestScriptPage so it's not re-created on every render,
-//    which was causing inputs to lose focus after a single keystroke.
 const SortableRow = ({ act, index, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: act.activityId });
@@ -42,13 +38,8 @@ const TestScriptPage = () => {
   const [activities, setActivities] = useState([]);
   const [selectedScript, setSelectedScript] = useState(null);
 
-  const [formData, setFormData] = useState({
-    testScriptName: "",
-  });
-
-  const [originalData, setOriginalData] = useState({
-    testScriptName: "",
-  });
+  const [formData, setFormData] = useState({ testScriptName: "" });
+  const [originalData, setOriginalData] = useState({ testScriptName: "" });
 
   const libraryOptions = ["core", "selenium"];
 
@@ -74,7 +65,6 @@ const TestScriptPage = () => {
     try {
       const res = await fetch(`${baseUrl}/fetchAllTestScript`);
       if (!res.ok) throw new Error("Failed to fetch scripts");
-
       const data = await res.json();
       setScripts(data || []);
     } catch (err) {
@@ -87,10 +77,7 @@ const TestScriptPage = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleAdd = () => {
@@ -102,11 +89,7 @@ const TestScriptPage = () => {
 
   const handleEdit = (script) => {
     setEditScript(script);
-
-    const data = {
-      testScriptName: script.testScriptName,
-    };
-
+    const data = { testScriptName: script.testScriptName };
     setFormData(data);
     setOriginalData(data);
     setShowModal(true);
@@ -117,14 +100,11 @@ const TestScriptPage = () => {
       const url = editScript
         ? `${baseUrl}/update/${editScript.testScriptId}`
         : `${baseUrl}/create`;
-
       const method = editScript ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -139,12 +119,8 @@ const TestScriptPage = () => {
 
   const handleDeleteScript = async (id) => {
     try {
-      const res = await fetch(`${baseUrl}/delete/${id}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(`${baseUrl}/delete/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
-
       setScripts((prev) => prev.filter((s) => s.testScriptId !== id));
     } catch (err) {
       console.error(err);
@@ -164,56 +140,19 @@ const TestScriptPage = () => {
       const res = await fetch(
         `http://localhost:5001/api/vi/activity/fetchActivityByTestScriptId/${scriptId}`,
       );
-
       if (!res.ok) throw new Error("Failed to fetch activities");
 
       const data = await res.json();
-
       const normalized = (data.activityList || []).map((a, i) => ({
         ...a,
         actOrder: a.actOrder ?? i + 1,
       }));
 
       setActivities(normalized);
-
       setOriginalOrder(normalized.map((a) => a._id));
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const saveOrderToBackend = async () => {
-    try {
-      const payload = activities.map((a, index) => ({
-        _id: a._id,
-        actOrder: index + 1,
-      }));
-
-      const res = await fetch(
-        "http://localhost:5001/api/vi/activity/updateOrder",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ activities: payload }),
-        },
-      );
-
-      if (!res.ok) throw new Error("Order update failed");
-
-      alert("Order saved successfully");
-
-      setOriginalOrder(activities.map((a) => a._id));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const isOrderChanged = () => {
-    const currentOrder = activities.map((a) => a._id);
-
-    if (currentOrder.length !== originalOrder.length) return true;
-
-    return currentOrder.some((id, index) => id !== originalOrder[index]);
   };
 
   const handleViewActivities = async (script) => {
@@ -228,17 +167,14 @@ const TestScriptPage = () => {
 
   const handleActivityChange = (index, field, value) => {
     const updated = [...activities];
-
     updated[index] = {
       ...updated[index],
       [field]: value,
       isDirty: true,
     };
-
     if (field === "library") {
       updated[index].function = "";
     }
-
     setActivities(updated);
   };
 
@@ -271,7 +207,19 @@ const TestScriptPage = () => {
   };
 
   // =========================
-  // DELETE ACTIVITY
+  // CANCEL NEW ACTIVITY (remove from UI only)
+  // =========================
+
+  const handleCancelNewActivity = (activityId) => {
+    setActivities((prev) =>
+      prev
+        .filter((a) => a.activityId !== activityId)
+        .map((a, i) => ({ ...a, actOrder: i + 1 })),
+    );
+  };
+
+  // =========================
+  // DELETE SAVED ACTIVITY
   // =========================
 
   const handleDeleteActivity = async (activity) => {
@@ -280,96 +228,125 @@ const TestScriptPage = () => {
         `http://localhost:5001/api/vi/activity/delete/${activity._id}`,
         { method: "DELETE" },
       );
-
       if (!res.ok) throw new Error("Delete failed");
 
-      const updated = activities
-        .filter((a) => a._id !== activity._id)
-        .map((a, i) => ({
-          ...a,
-          actOrder: i + 1,
-        }));
-
-      setActivities(updated);
+      setActivities((prev) =>
+        prev
+          .filter((a) => a._id !== activity._id)
+          .map((a, i) => ({ ...a, actOrder: i + 1 })),
+      );
     } catch (err) {
       console.error(err);
     }
   };
 
   // =========================
-  // SAVE ACTIVITY
+  // SAVE ALL (dirty + new + order)
   // =========================
 
-  const handleUpdateActivity = async (activity) => {
+  const hasPendingChanges = () => {
+    const hasActivityChanges = activities.some((a) => a.isDirty || a.isNew);
+    const currentOrder = activities.map((a) => a._id);
+    const orderChanged =
+      currentOrder.length !== originalOrder.length ||
+      currentOrder.some((id, i) => id !== originalOrder[i]);
+    return hasActivityChanges || orderChanged;
+  };
+
+  const handleSaveAll = async () => {
     try {
-      const isNew = activity.isNew;
+      // 1. Save all new or dirty activities
+      const toSave = activities.filter((a) => a.isDirty || a.isNew);
 
-      if (!activity.activityName || !activity.library) {
-        alert("Please fill required fields (Name & Library)");
-        return;
-      }
+      const savedActivities = [...activities];
 
-      const url = isNew
-        ? "http://localhost:5001/api/vi/activity/create"
-        : `http://localhost:5001/api/vi/activity/update/${activity._id}`;
+      for (const activity of toSave) {
+        if (!activity.activityName || !activity.library) {
+          alert(
+            `Please fill required fields (Name & Library) for all activities`,
+          );
+          return;
+        }
 
-      const method = isNew ? "POST" : "PUT";
+        const isNew = activity.isNew;
+        const url = isNew
+          ? "http://localhost:5001/api/vi/activity/create"
+          : `http://localhost:5001/api/vi/activity/update/${activity._id}`;
+        const method = isNew ? "POST" : "PUT";
 
-      const { isNew: _isNew, isDirty, ...cleanActivity } = activity;
+        const { isNew: _isNew, isDirty, ...cleanActivity } = activity;
+        const payload = {
+          ...cleanActivity,
+          testScriptId: selectedScript.testScriptId,
+        };
 
-      const payload = {
-        ...cleanActivity,
-        testScriptId: selectedScript.testScriptId,
-      };
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+        if (!res.ok) throw new Error("Save failed");
 
-      if (!res.ok) throw new Error("Save failed");
+        const response = await res.json();
+        const saved = response?.activity || response;
 
-      const response = await res.json();
-
-      const saved = response?.activity || response;
-
-      setActivities((prev) =>
-        prev.map((a) => {
-          if (a.activityId !== activity.activityId) return a;
-
-          return {
-            ...a,
+        const idx = savedActivities.findIndex(
+          (a) => a.activityId === activity.activityId,
+        );
+        if (idx !== -1) {
+          savedActivities[idx] = {
+            ...savedActivities[idx],
             ...saved,
-            _id: saved._id || a._id,
-            actOrder: saved.actOrder ?? a.actOrder,
+            _id: saved._id || savedActivities[idx]._id,
+            actOrder: saved.actOrder ?? savedActivities[idx].actOrder,
             isNew: false,
             isDirty: false,
           };
-        }),
+        }
+      }
+
+      // 2. Save order for all activities
+      const orderPayload = savedActivities.map((a, index) => ({
+        _id: a._id,
+        actOrder: index + 1,
+      }));
+
+      const orderRes = await fetch(
+        "http://localhost:5001/api/vi/activity/updateOrder",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ activities: orderPayload }),
+        },
       );
+
+      if (!orderRes.ok) throw new Error("Order update failed");
+
+      setActivities(savedActivities);
+      setOriginalOrder(savedActivities.map((a) => a._id));
+
+      alert("All changes saved successfully");
     } catch (err) {
-      console.error("Activity save failed:", err);
-      alert("Failed to save activity");
+      console.error("Save all failed:", err);
+      alert("Failed to save changes");
     }
   };
 
+  // =========================
+  // DRAG END
+  // =========================
+
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     if (!over || active.id === over.id) return;
 
     const oldIndex = activities.findIndex((a) => a.activityId === active.id);
-
     const newIndex = activities.findIndex((a) => a.activityId === over.id);
 
     const updated = arrayMove(activities, oldIndex, newIndex).map((a, i) => ({
       ...a,
       actOrder: i + 1,
-      // ✅ intentionally NOT setting isDirty here — order changes are saved
-      // via the SO button only, not per-row Save buttons
     }));
 
     setActivities(updated);
@@ -397,7 +374,6 @@ const TestScriptPage = () => {
             <th>Actions</th>
           </tr>
         </thead>
-
         <tbody>
           {scripts.map((script) => (
             <tr key={script.testScriptId}>
@@ -431,7 +407,6 @@ const TestScriptPage = () => {
             {editScript ? "Update Script" : "Add Script"}
           </Modal.Title>
         </Modal.Header>
-
         <Modal.Body>
           <Form.Control
             name="testScriptName"
@@ -439,7 +414,6 @@ const TestScriptPage = () => {
             onChange={handleChange}
           />
         </Modal.Body>
-
         <Modal.Footer>
           <Button onClick={() => setShowModal(false)}>Close</Button>
           <Button onClick={handleSave} disabled={!isChanged}>
@@ -455,12 +429,22 @@ const TestScriptPage = () => {
         fullscreen
       >
         <Modal.Header closeButton>
-          <div className="d-flex justify-content-between align-items-center w-100">
+          <div className="d-flex justify-content-between align-items-center w-100 me-2">
             <Modal.Title className="mb-0">
               Activities - {selectedScript?.testScriptName}
             </Modal.Title>
-
-            <Button onClick={handleAddActivity}>New Activity</Button>
+            <div className="d-flex gap-2">
+              <Button variant="primary" onClick={handleAddActivity}>
+                New Activity
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleSaveAll}
+                disabled={!hasPendingChanges()}
+              >
+                Save All
+              </Button>
+            </div>
           </div>
         </Modal.Header>
 
@@ -468,15 +452,7 @@ const TestScriptPage = () => {
           <Table bordered hover>
             <thead>
               <tr>
-                <th>
-                  <Button
-                    variant="warning"
-                    onClick={saveOrderToBackend}
-                    disabled={!isOrderChanged()}
-                  >
-                    SO
-                  </Button>
-                </th>
+                <th></th>
                 <th>Seq</th>
                 <th>Name</th>
                 <th>Library</th>
@@ -591,23 +567,28 @@ const TestScriptPage = () => {
                           />
                         </td>
 
-                        <td className="d-flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="success"
-                            disabled={!act.isDirty && !act.isNew}
-                            onClick={() => handleUpdateActivity(act)}
-                          >
-                            Save
-                          </Button>
-
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleDeleteActivity(act)}
-                          >
-                            Delete
-                          </Button>
+                        <td>
+                          {act.isNew ? (
+                            // Unsaved new row → Cancel only
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                handleCancelNewActivity(act.activityId)
+                              }
+                            >
+                              Cancel
+                            </Button>
+                          ) : (
+                            // Saved row → Delete only
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() => handleDeleteActivity(act)}
+                            >
+                              Delete
+                            </Button>
+                          )}
                         </td>
                       </SortableRow>
                     ))}
