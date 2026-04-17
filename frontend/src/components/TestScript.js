@@ -11,6 +11,27 @@ import {
 
 import { CSS } from "@dnd-kit/utilities";
 
+// ✅ FIXED: Moved outside TestScriptPage so it's not re-created on every render,
+//    which was causing inputs to lose focus after a single keystroke.
+const SortableRow = ({ act, index, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: act.activityId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style}>
+      <td {...attributes} {...listeners} style={{ cursor: "grab" }}>
+        ☰
+      </td>
+      {children}
+    </tr>
+  );
+};
+
 const TestScriptPage = () => {
   const [scripts, setScripts] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -155,7 +176,6 @@ const TestScriptPage = () => {
 
       setActivities(normalized);
 
-      // ✅ store original order
       setOriginalOrder(normalized.map((a) => a._id));
     } catch (err) {
       console.error(err);
@@ -182,7 +202,6 @@ const TestScriptPage = () => {
 
       alert("Order saved successfully");
 
-      // ✅ reset original order after save
       setOriginalOrder(activities.map((a) => a._id));
     } catch (err) {
       console.error(err);
@@ -202,14 +221,6 @@ const TestScriptPage = () => {
     await fetchActivities(script.testScriptId);
     setShowActivityModal(true);
   };
-
-  // =========================
-  // ORDER SORTING
-  // =========================
-
-  const sortedActivities = [...activities].sort(
-    (a, b) => a.actOrder - b.actOrder,
-  );
 
   // =========================
   // ACTIVITY CHANGE
@@ -293,28 +304,17 @@ const TestScriptPage = () => {
     try {
       const isNew = activity.isNew;
 
-      // =========================
-      // 1. VALIDATION
-      // =========================
       if (!activity.activityName || !activity.library) {
         alert("Please fill required fields (Name & Library)");
         return;
       }
 
-      // =========================
-      // 2. BUILD URL + METHOD
-      // =========================
       const url = isNew
         ? "http://localhost:5001/api/vi/activity/create"
         : `http://localhost:5001/api/vi/activity/update/${activity._id}`;
 
       const method = isNew ? "POST" : "PUT";
 
-      // =========================
-      // 3. CLEAN PAYLOAD (IMPORTANT)
-      //    - NEVER send isNew/isDirty
-      //    - NEVER send null _id on create
-      // =========================
       const { isNew: _isNew, isDirty, ...cleanActivity } = activity;
 
       const payload = {
@@ -322,9 +322,6 @@ const TestScriptPage = () => {
         testScriptId: selectedScript.testScriptId,
       };
 
-      // =========================
-      // 4. API CALL
-      // =========================
       const res = await fetch(url, {
         method,
         headers: {
@@ -337,14 +334,8 @@ const TestScriptPage = () => {
 
       const response = await res.json();
 
-      // =========================
-      // 5. NORMALIZE RESPONSE
-      // =========================
       const saved = response?.activity || response;
 
-      // =========================
-      // 6. UPDATE STATE SAFELY
-      // =========================
       setActivities((prev) =>
         prev.map((a) => {
           if (a.activityId !== activity.activityId) return a;
@@ -352,11 +343,8 @@ const TestScriptPage = () => {
           return {
             ...a,
             ...saved,
-
-            // ensure stability
             _id: saved._id || a._id,
             actOrder: saved.actOrder ?? a.actOrder,
-
             isNew: false,
             isDirty: false,
           };
@@ -380,30 +368,13 @@ const TestScriptPage = () => {
     const updated = arrayMove(activities, oldIndex, newIndex).map((a, i) => ({
       ...a,
       actOrder: i + 1,
-      isDirty: true,
+      // ✅ intentionally NOT setting isDirty here — order changes are saved
+      // via the SO button only, not per-row Save buttons
     }));
 
     setActivities(updated);
   };
 
-  const SortableRow = ({ act, index, children }) => {
-    const { attributes, listeners, setNodeRef, transform, transition } =
-      useSortable({ id: act.activityId });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-    };
-
-    return (
-      <tr ref={setNodeRef} style={style}>
-        <td {...attributes} {...listeners} style={{ cursor: "grab" }}>
-          ☰
-        </td>
-        {children}
-      </tr>
-    );
-  };
   // =========================
   // UI
   // =========================
