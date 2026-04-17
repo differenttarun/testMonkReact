@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import { DndContext, closestCenter } from "@dnd-kit/core";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import {
   arrayMove,
   SortableContext,
@@ -8,15 +9,19 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  Trash,
+  PencilSquare,
+  XCircle,
+  FloppyFill,
+  PlusCircleFill,
+} from "react-bootstrap-icons";
 
-const SortableRow = ({ act, index, children }) => {
+const SortableRow = ({ act, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: act.activityId });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <tr ref={setNodeRef} style={style}>
@@ -33,16 +38,13 @@ const TestScriptPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editScript, setEditScript] = useState(null);
   const [originalOrder, setOriginalOrder] = useState([]);
-
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activities, setActivities] = useState([]);
   const [selectedScript, setSelectedScript] = useState(null);
-
   const [formData, setFormData] = useState({ testScriptName: "" });
   const [originalData, setOriginalData] = useState({ testScriptName: "" });
 
   const libraryOptions = ["core", "selenium"];
-
   const functionOptionsMap = {
     core: ["smartcompare", "getExpectedResults"],
     selenium: [
@@ -52,9 +54,7 @@ const TestScriptPage = () => {
       "clickButton",
     ],
   };
-
   const modelOptions = ["SYNE", "FAST"];
-
   const baseUrl = "http://localhost:5001/api/vi/testscript";
 
   // =========================
@@ -76,9 +76,8 @@ const TestScriptPage = () => {
     fetchScripts();
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
 
   const handleAdd = () => {
     setEditScript(null);
@@ -109,7 +108,6 @@ const TestScriptPage = () => {
       });
 
       if (!res.ok) throw new Error("Save failed");
-
       setShowModal(false);
       fetchScripts();
     } catch (err) {
@@ -141,13 +139,11 @@ const TestScriptPage = () => {
         `http://localhost:5001/api/vi/activity/fetchActivityByTestScriptId/${scriptId}`,
       );
       if (!res.ok) throw new Error("Failed to fetch activities");
-
       const data = await res.json();
       const normalized = (data.activityList || []).map((a, i) => ({
         ...a,
         actOrder: a.actOrder ?? i + 1,
       }));
-
       setActivities(normalized);
       setOriginalOrder(normalized.map((a) => a._id));
     } catch (err) {
@@ -161,26 +157,12 @@ const TestScriptPage = () => {
     setShowActivityModal(true);
   };
 
-  // =========================
-  // ACTIVITY CHANGE
-  // =========================
-
   const handleActivityChange = (index, field, value) => {
     const updated = [...activities];
-    updated[index] = {
-      ...updated[index],
-      [field]: value,
-      isDirty: true,
-    };
-    if (field === "library") {
-      updated[index].function = "";
-    }
+    updated[index] = { ...updated[index], [field]: value, isDirty: true };
+    if (field === "library") updated[index].function = "";
     setActivities(updated);
   };
-
-  // =========================
-  // ADD ACTIVITY
-  // =========================
 
   const handleAddActivity = () => {
     const maxOrder =
@@ -188,27 +170,24 @@ const TestScriptPage = () => {
         ? Math.max(...activities.map((a) => a.actOrder || 0))
         : 0;
 
-    const newActivity = {
-      _id: null,
-      activityId: Date.now(),
-      testScriptId: selectedScript.testScriptId,
-      activityName: "",
-      library: "",
-      function: "",
-      model: "",
-      set: "",
-      use: "",
-      actOrder: maxOrder + 1,
-      isNew: true,
-      isDirty: true,
-    };
-
-    setActivities((prev) => [...prev, newActivity]);
+    setActivities((prev) => [
+      ...prev,
+      {
+        _id: null,
+        activityId: Date.now(),
+        testScriptId: selectedScript.testScriptId,
+        activityName: "",
+        library: "",
+        function: "",
+        model: "",
+        set: "",
+        use: "",
+        actOrder: maxOrder + 1,
+        isNew: true,
+        isDirty: true,
+      },
+    ]);
   };
-
-  // =========================
-  // CANCEL NEW ACTIVITY (remove from UI only)
-  // =========================
 
   const handleCancelNewActivity = (activityId) => {
     setActivities((prev) =>
@@ -218,10 +197,6 @@ const TestScriptPage = () => {
     );
   };
 
-  // =========================
-  // DELETE SAVED ACTIVITY
-  // =========================
-
   const handleDeleteActivity = async (activity) => {
     try {
       const res = await fetch(
@@ -229,7 +204,6 @@ const TestScriptPage = () => {
         { method: "DELETE" },
       );
       if (!res.ok) throw new Error("Delete failed");
-
       setActivities((prev) =>
         prev
           .filter((a) => a._id !== activity._id)
@@ -239,10 +213,6 @@ const TestScriptPage = () => {
       console.error(err);
     }
   };
-
-  // =========================
-  // SAVE ALL (dirty + new + order)
-  // =========================
 
   const hasPendingChanges = () => {
     const hasActivityChanges = activities.some((a) => a.isDirty || a.isNew);
@@ -255,15 +225,13 @@ const TestScriptPage = () => {
 
   const handleSaveAll = async () => {
     try {
-      // 1. Save all new or dirty activities
       const toSave = activities.filter((a) => a.isDirty || a.isNew);
-
       const savedActivities = [...activities];
 
       for (const activity of toSave) {
         if (!activity.activityName || !activity.library) {
           alert(
-            `Please fill required fields (Name & Library) for all activities`,
+            "Please fill required fields (Name & Library) for all activities",
           );
           return;
         }
@@ -275,19 +243,16 @@ const TestScriptPage = () => {
         const method = isNew ? "POST" : "PUT";
 
         const { isNew: _isNew, isDirty, ...cleanActivity } = activity;
-        const payload = {
-          ...cleanActivity,
-          testScriptId: selectedScript.testScriptId,
-        };
-
         const res = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...cleanActivity,
+            testScriptId: selectedScript.testScriptId,
+          }),
         });
 
         if (!res.ok) throw new Error("Save failed");
-
         const response = await res.json();
         const saved = response?.activity || response;
 
@@ -306,18 +271,17 @@ const TestScriptPage = () => {
         }
       }
 
-      // 2. Save order for all activities
-      const orderPayload = savedActivities.map((a, index) => ({
-        _id: a._id,
-        actOrder: index + 1,
-      }));
-
       const orderRes = await fetch(
         "http://localhost:5001/api/vi/activity/updateOrder",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ activities: orderPayload }),
+          body: JSON.stringify({
+            activities: savedActivities.map((a, i) => ({
+              _id: a._id,
+              actOrder: i + 1,
+            })),
+          }),
         },
       );
 
@@ -325,17 +289,12 @@ const TestScriptPage = () => {
 
       setActivities(savedActivities);
       setOriginalOrder(savedActivities.map((a) => a._id));
-
       alert("All changes saved successfully");
     } catch (err) {
       console.error("Save all failed:", err);
       alert("Failed to save changes");
     }
   };
-
-  // =========================
-  // DRAG END
-  // =========================
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -344,12 +303,12 @@ const TestScriptPage = () => {
     const oldIndex = activities.findIndex((a) => a.activityId === active.id);
     const newIndex = activities.findIndex((a) => a.activityId === over.id);
 
-    const updated = arrayMove(activities, oldIndex, newIndex).map((a, i) => ({
-      ...a,
-      actOrder: i + 1,
-    }));
-
-    setActivities(updated);
+    setActivities(
+      arrayMove(activities, oldIndex, newIndex).map((a, i) => ({
+        ...a,
+        actOrder: i + 1,
+      })),
+    );
   };
 
   // =========================
@@ -361,7 +320,10 @@ const TestScriptPage = () => {
       {/* HEADER */}
       <div className="d-flex justify-content-between mb-3">
         <h3>Test Scripts</h3>
-        <Button onClick={handleAdd}>New Test Script</Button>
+        <Button onClick={handleAdd}>
+          <PlusCircleFill className="me-2" />
+          New Test Script
+        </Button>
       </div>
 
       {/* SCRIPT TABLE */}
@@ -380,20 +342,38 @@ const TestScriptPage = () => {
               <td>{script.testScriptId}</td>
               <td>{script.testScriptName}</td>
               <td>{new Date(script.createdDate).toLocaleString()}</td>
-              <td>
-                <Button size="sm" onClick={() => handleEdit(script)}>
-                  Edit
-                </Button>{" "}
-                <Button size="sm" onClick={() => handleViewActivities(script)}>
-                  Activities
-                </Button>{" "}
+              <td className="d-flex gap-2">
+                <OverlayTrigger
+                  placement="top"
+                  overlay={<Tooltip>Edit Activity</Tooltip>}
+                >
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => handleEdit(script)}
+                  >
+                    <PencilSquare className="me-1" />
+                  </Button>
+                </OverlayTrigger>
                 <Button
                   size="sm"
-                  variant="danger"
-                  onClick={() => handleDeleteScript(script.testScriptId)}
+                  variant="info"
+                  onClick={() => handleViewActivities(script)}
                 >
-                  Delete
+                  Activities
                 </Button>
+                <OverlayTrigger
+                  placement="top"
+                  overlay={<Tooltip>Delete Activity</Tooltip>}
+                >
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => handleDeleteActivity(script.testScriptId)}
+                  >
+                    <Trash />
+                  </Button>
+                </OverlayTrigger>
               </td>
             </tr>
           ))}
@@ -415,9 +395,11 @@ const TestScriptPage = () => {
           />
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => setShowModal(false)}>Close</Button>
-          <Button onClick={handleSave} disabled={!isChanged}>
-            Save
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            <XCircle className="me-1" /> Close
+          </Button>
+          <Button variant="success" onClick={handleSave} disabled={!isChanged}>
+            <FloppyFill className="me-1" /> Save
           </Button>
         </Modal.Footer>
       </Modal>
@@ -431,19 +413,24 @@ const TestScriptPage = () => {
         <Modal.Header closeButton>
           <div className="d-flex justify-content-between align-items-center w-100 me-2">
             <Modal.Title className="mb-0">
-              Activities - {selectedScript?.testScriptName}
+              Activities — {selectedScript?.testScriptName}
             </Modal.Title>
             <div className="d-flex gap-2">
               <Button variant="primary" onClick={handleAddActivity}>
-                New Activity
+                <PlusCircleFill className="me-1" /> New Activity
               </Button>
-              <Button
-                variant="success"
-                onClick={handleSaveAll}
-                disabled={!hasPendingChanges()}
+              <OverlayTrigger
+                placement="top"
+                overlay={<Tooltip>Save All</Tooltip>}
               >
-                Save All
-              </Button>
+                <Button
+                  variant="success"
+                  onClick={handleSaveAll}
+                  disabled={!hasPendingChanges()}
+                >
+                  <FloppyFill className="me-1" />
+                </Button>
+              </OverlayTrigger>
             </div>
           </div>
         </Modal.Header>
@@ -569,25 +556,34 @@ const TestScriptPage = () => {
 
                         <td>
                           {act.isNew ? (
-                            // Unsaved new row → Cancel only
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() =>
-                                handleCancelNewActivity(act.activityId)
-                              }
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Cancel</Tooltip>}
                             >
-                              Cancel
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                  handleCancelNewActivity(act.activityId)
+                                }
+                              >
+                                <XCircle className="me-1" />
+                              </Button>
+                            </OverlayTrigger>
                           ) : (
-                            // Saved row → Delete only
-                            <Button
-                              size="sm"
-                              variant="danger"
-                              onClick={() => handleDeleteActivity(act)}
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Delete</Tooltip>}
                             >
-                              Delete
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => handleDeleteActivity(act)}
+                                className="icon-btn"
+                              >
+                                <Trash />
+                              </Button>
+                            </OverlayTrigger>
                           )}
                         </td>
                       </SortableRow>
@@ -599,7 +595,12 @@ const TestScriptPage = () => {
         </Modal.Body>
 
         <Modal.Footer>
-          <Button onClick={() => setShowActivityModal(false)}>Close</Button>
+          <Button
+            variant="secondary"
+            onClick={() => setShowActivityModal(false)}
+          >
+            <XCircle className="me-1" /> Close
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>
