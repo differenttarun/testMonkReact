@@ -352,7 +352,7 @@ const TestScriptPage = () => {
                     variant="primary"
                     onClick={() => handleEdit(script)}
                   >
-                    <PencilSquare className="me-1" />
+                    <PencilSquare />
                   </Button>
                 </OverlayTrigger>
                 <Button
@@ -369,7 +369,7 @@ const TestScriptPage = () => {
                   <Button
                     size="sm"
                     variant="danger"
-                    onClick={() => handleDeleteActivity(script.testScriptId)}
+                    onClick={() => handleDeleteScript(script.testScriptId)}
                   >
                     <Trash />
                   </Button>
@@ -428,7 +428,7 @@ const TestScriptPage = () => {
                   onClick={handleSaveAll}
                   disabled={!hasPendingChanges()}
                 >
-                  <FloppyFill className="me-1" />
+                  <FloppyFill />
                 </Button>
               </OverlayTrigger>
             </div>
@@ -567,7 +567,7 @@ const TestScriptPage = () => {
                                   handleCancelNewActivity(act.activityId)
                                 }
                               >
-                                <XCircle className="me-1" />
+                                <XCircle />
                               </Button>
                             </OverlayTrigger>
                           ) : (
