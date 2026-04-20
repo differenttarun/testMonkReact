@@ -3,11 +3,20 @@ import React, { useEffect, useState } from "react";
 const TestCase = () => {
   const [testCases, setTestCases] = useState([]);
   const [testScripts, setTestScripts] = useState([]);
+  const [selectedEnv, setSelectedEnv] = useState("");
+
   const [newTestCase, setNewTestCase] = useState({
     testCaseName: "",
     testScriptId: "",
   });
   const [editTestCase, setEditTestCase] = useState(null);
+
+  const [testDataList, setTestDataList] = useState([]);
+  const [newTestData, setNewTestData] = useState({
+    env: "",
+    key: "",
+    value: "",
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -133,6 +142,70 @@ const TestCase = () => {
     }
   };
 
+  const handleAddTestData = async () => {
+    if (!selectedEnv) {
+      alert("Please select environment first");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5001/api/vi/testData/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          testCaseId: editTestCase.testCaseId,
+          env: selectedEnv, // 🔥 from dropdown
+          key: newTestData.key,
+          value: newTestData.value,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to add");
+
+      setNewTestData({ key: "", value: "" });
+
+      fetchTestData(editTestCase.testCaseId, selectedEnv);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (editTestCase?.testCaseId && selectedEnv) {
+      fetchTestData(editTestCase.testCaseId, selectedEnv);
+    }
+  }, [selectedEnv, editTestCase]);
+
+  const fetchTestData = async (testCaseId, env) => {
+    if (!env) return; // ❌ do nothing if env not selected
+
+    try {
+      const res = await fetch(
+        `http://localhost:5001/api/vi/testData/fetchTestDataByTestCaseIDAndEnv/${testCaseId}/${env}`,
+      );
+      const data = await res.json();
+      setTestDataList(data);
+    } catch (err) {
+      console.error("Error fetching test data", err);
+    }
+  };
+
+  const handleDeleteTestData = async (id) => {
+    if (!window.confirm("Delete this test data?")) return;
+
+    try {
+      await fetch(`http://localhost:5001/api/vi/testData/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      fetchTestData(editTestCase.testCaseId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleUpdate = (tc) => {
     setEditTestCase({
       testCaseId: tc.testCaseId,
@@ -140,7 +213,9 @@ const TestCase = () => {
       testScriptId: tc.testScriptId,
     });
 
-    // open modal
+    setSelectedEnv(""); // 🔥 reset env
+    setTestDataList([]); // 🔥 clear old data
+
     const modal = new window.bootstrap.Modal(
       document.getElementById("updateTestCaseModal"),
     );
@@ -293,6 +368,7 @@ const TestCase = () => {
             </div>
 
             <div className="modal-body">
+              {/* Test Case Fields */}
               <div className="mb-3">
                 <label className="form-label">Test Case Name</label>
                 <input
@@ -304,16 +380,111 @@ const TestCase = () => {
                 />
               </div>
 
+              {/* ---------------- TEST DATA SECTION ---------------- */}
+              <hr />
+              <hr />
+              <h6>Test Data</h6>
+
+              {/* ENV SELECT */}
               <div className="mb-3">
-                <label className="form-label">Test Script ID</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="testScriptId"
-                  value={editTestCase?.testScriptId || ""}
-                  onChange={handleEditChange}
-                />
+                <label className="form-label">Environment</label>
+                <select
+                  className="form-select"
+                  value={selectedEnv}
+                  onChange={(e) => setSelectedEnv(e.target.value)}
+                >
+                  <option value="">Select Environment</option>
+                  <option value="QA">QA</option>
+                  <option value="DEV">DEV</option>
+                  <option value="UAT">UAT</option>
+                  <option value="PROD">PROD</option>
+                </select>
               </div>
+
+              {/* Add Row - only show if env selected */}
+              {selectedEnv && (
+                <div className="row mb-2">
+                  <div className="col">
+                    <input
+                      className="form-control"
+                      placeholder="Key"
+                      value={newTestData.key}
+                      onChange={(e) =>
+                        setNewTestData({ ...newTestData, key: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="col">
+                    <input
+                      className="form-control"
+                      placeholder="Value"
+                      value={newTestData.value}
+                      onChange={(e) =>
+                        setNewTestData({
+                          ...newTestData,
+                          value: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="col-auto">
+                    <button
+                      className="btn btn-success"
+                      onClick={handleAddTestData}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Table */}
+              <table className="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>Env</th>
+                    <th>Key</th>
+                    <th>Value</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {!selectedEnv ? (
+                    <tr>
+                      <td colSpan="4" className="text-center text-muted">
+                        Select environment to view test data
+                      </td>
+                    </tr>
+                  ) : testDataList.length > 0 ? (
+                    testDataList.map((td) => (
+                      <tr key={td.testDataId}>
+                        <td>{td.env}</td>
+                        <td>{td.key}</td>
+                        <td>{td.value}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDeleteTestData(td.testDataId)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center">
+                        No Test Data Found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Table */}
             </div>
 
             <div className="modal-footer">

@@ -42,16 +42,16 @@ router.get(
         env: env,
       });
 
-      if (testDataList.length === 0) {
-        return res.status(404).json({
-          message:
-            "testData with testCaseid " +
-            testCaseId +
-            " and env " +
-            env +
-            " not found",
-        });
-      }
+      // if (testDataList.length === 0) {
+      //   return res.status(404).json({
+      //     message:
+      //       "testData with testCaseid " +
+      //       testCaseId +
+      //       " and env " +
+      //       env +
+      //       " not found",
+      //   });
+      // }
 
       res.status(200).json(testDataList);
     } catch (error) {

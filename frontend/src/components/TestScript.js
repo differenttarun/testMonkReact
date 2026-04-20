@@ -46,7 +46,7 @@ const TestScriptPage = () => {
 
   const libraryOptions = ["core", "selenium"];
   const functionOptionsMap = {
-    core: ["smartcompare", "getExpectedResults"],
+    core: ["smartcompare", "getExpectedResult", "waitInMillis"],
     selenium: [
       "launchApplication",
       "getUIValue",
